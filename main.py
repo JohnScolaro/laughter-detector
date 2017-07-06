@@ -20,8 +20,8 @@ for x in range(100):
 logger = helpers.Logger(save_folder_name)
 
 # System Parameters
-learning_rate = 0.1
-training_epochs = 2
+learning_rate = 0.5
+training_epochs = 1
 display_step = 10
 batch_size = 5000
 train_test_ratio = 0.85
@@ -40,7 +40,7 @@ data, label, test_data, test_label = helpers.input_pipeline(dataset_file_list,
         train_test_ratio=train_test_ratio)
 
 # Construct model
-mlp_train, mlp_test = helpers.multilayer_perceptron(data, test_data, n_input, n_classes, [50, 50])
+mlp_train, mlp_test = helpers.multilayer_perceptron(data, test_data, n_input, n_classes, [50, 50, 50, 50])
 
 # Define cost and optimizer
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=mlp_train,
@@ -71,6 +71,9 @@ print("Launching TensorFlow Session after " + str(time.time() -
 # Launch the graph
 with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
 
+    # Finalize the graph so no more changes can be made
+    sess.graph.finalize()
+
     # Initialize all system variables
     sess.run(init_op)
 
@@ -95,14 +98,12 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
             if batch % display_step == 0:
 
                 # Display some info about the current training session.
-                print("Batch number = {:d}. Epoch ~{:.3f}. Elapsed Time {:.3f}.".format(batch, batch *
-                        batch_size / lines_in_one_epoch), time.time() - start_time)
+                print("Batch number = {:d}. Epoch ~{:.3f}. Elapsed Time = {:.3f}s.".format(batch,
+                        batch * batch_size / lines_in_one_epoch, time.time() - start_time))
 
                 # Write data to summary's on each display batch
                 writer.add_run_metadata(run_metadata, 'batch' + str(batch))
                 writer.add_summary(s, batch)
-
-
 
         except tf.errors.OutOfRangeError:
             break
@@ -111,14 +112,13 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
 
     print("Training Completed in " + str(time.time() - start_time) + " seconds.")
 
-    #acc, conf = helpers.evaluate_accuracy(sess, accuracy, confusion,
-    #        test_data, test_label)
-    #conf_save_path = os.path.join(save_folder_name, 'pics')
-    #helpers.save_confusion_matrix(conf, conf_save_path,
-    #        classes=['Not Laughter', 'Laughter'])
-    #helpers.save_confusion_matrix(conf, conf_save_path,
-    #        classes=['Not Laughter', 'Laughter'], normalize=True,
-    #        name='normalized_confusion_matrix')
+    acc, conf = helpers.evaluate_accuracy(sess, accuracy, confusion)
+    conf_save_path = os.path.join(save_folder_name, 'pics')
+    helpers.save_confusion_matrix(conf, conf_save_path,
+            classes=['Not Laughter', 'Laughter'])
+    helpers.save_confusion_matrix(conf, conf_save_path,
+            classes=['Not Laughter', 'Laughter'], normalize=True,
+            name='normalized_confusion_matrix')
 
     coord.request_stop()
     coord.join(threads)

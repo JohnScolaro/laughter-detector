@@ -210,40 +210,41 @@ def multilayer_perceptron(x_train, x_test, n_inputs, n_outputs, hidden_layers):
 
     # Add the first layer to the dictionary
     cur_layer_num = 1
-    weights['w' + str(cur_layer_num)] = tf.Variable(tf.random_normal([n_inputs,
-            hidden_layers[0]]), name=("Layer_" + str(cur_layer_num) + "_Weights"))
-    biases['b' + str(cur_layer_num)] = tf.Variable(tf.random_normal(
-            [hidden_layers[0]]), name=("Layer_" + str(cur_layer_num) + "_Biases"))
+    with tf.variable_scope("Layer1"):
+        weights['w' + str(cur_layer_num)] = tf.Variable(tf.random_normal([n_inputs,
+                hidden_layers[0]]), name=("Layer_" + str(cur_layer_num) + "_Weights"))
+        biases['b' + str(cur_layer_num)] = tf.Variable(tf.random_normal(
+                [hidden_layers[0]]), name=("Layer_" + str(cur_layer_num) + "_Biases"))
 
     # Add all but the last layers to the dictionary
     cur_layer_num = 2
     for layer in hidden_layers[1:]:
-        weights['w' + str(cur_layer_num)] = tf.Variable(tf.random_normal(
-                [hidden_layers[cur_layer_num - 2], layer]), name=("Layer_" +
-                str(cur_layer_num) + "_Weights"))
-        biases['b' + str(cur_layer_num)] = tf.Variable(tf.random_normal([layer]),
-                name=("Layer_" + str(cur_layer_num) + "_Biases"))
-        cur_layer_num += 1
+        with tf.variable_scope("Layer" + str(cur_layer_num)):
+            weights['w' + str(cur_layer_num)] = tf.Variable(tf.random_normal(
+                    [hidden_layers[cur_layer_num - 2], layer]), name=("Layer_" +
+                    str(cur_layer_num) + "_Weights"))
+            biases['b' + str(cur_layer_num)] = tf.Variable(tf.random_normal([layer]),
+                    name=("Layer_" + str(cur_layer_num) + "_Biases"))
+            cur_layer_num += 1
 
     # Add the last layer to the dictionary
-    weights['out'] = tf.Variable(tf.random_normal([hidden_layers[-1],
-            n_outputs]), name="Output_Weights")
-    biases['out'] = tf.Variable(tf.random_normal([n_outputs]),
-            name="Output_Biases")
-
-    print(weights)
-    print(biases)
+    with tf.variable_scope("OutputLayer"):
+        weights['out'] = tf.Variable(tf.random_normal([hidden_layers[-1],
+                n_outputs]), name="Output_Weights")
+        biases['out'] = tf.Variable(tf.random_normal([n_outputs]),
+                name="Output_Biases")
 
     # Set up the connections for the first layer
     cur_layer_num = 1
-    cur_layer_train = tf.add(tf.matmul(x_train, weights['w1']), biases['b1'])
-    cur_layer_train = tf.nn.relu(cur_layer_train)
-    cur_layer_test = tf.add(tf.matmul(x_test, weights['w1']), biases['b1'])
-    cur_layer_test = tf.nn.relu(cur_layer_test)
-    tf.summary.image("Layer 1 Weights", tf.reshape(weights['w1'], [1, n_inputs, hidden_layers[0], 1]))
-    tf.summary.image("Layer 1 Biases", tf.reshape(biases['b1'], [1, 1, hidden_layers[0], 1]))
-    tf.summary.histogram("Layer 1 Weights", weights['w1'])
-    tf.summary.histogram("Layer 1 Biases", biases['b1'])
+    with tf.variable_scope("Layer1"):
+        cur_layer_train = tf.add(tf.matmul(x_train, weights['w1']), biases['b1'])
+        cur_layer_train = tf.nn.relu(cur_layer_train)
+        cur_layer_test = tf.add(tf.matmul(x_test, weights['w1']), biases['b1'])
+        cur_layer_test = tf.nn.relu(cur_layer_test)
+        tf.summary.image("Layer 1 Weights", tf.reshape(weights['w1'], [1, n_inputs, hidden_layers[0], 1]))
+        tf.summary.image("Layer 1 Biases", tf.reshape(biases['b1'], [1, 1, hidden_layers[0], 1]))
+        tf.summary.histogram("Layer 1 Weights", weights['w1'])
+        tf.summary.histogram("Layer 1 Biases", biases['b1'])
 
     # Set up the connections for the middle layers
     cur_layer_num = 2
@@ -256,7 +257,7 @@ def multilayer_perceptron(x_train, x_test, n_inputs, n_outputs, hidden_layers):
         cur_layer_test = tf.nn.relu(cur_layer_test)
         tf.summary.image("Layer " + str(cur_layer_num) + " Weights",
                 tf.reshape(weights['w' + str(cur_layer_num)], [1,
-                hidden_layers[cur_layer_num - 1], layer, 1]))
+                hidden_layers[cur_layer_num - 2], layer, 1]))
         tf.summary.image("Layer " + str(cur_layer_num) + " Biases",
                 tf.reshape(biases['b' + str(cur_layer_num)], [1, 1, layer, 1]))
         tf.summary.histogram("Layer " + str(cur_layer_num) + " Weights",
@@ -295,7 +296,7 @@ def accuracy_calculation(mlp, y):
 
     return accuracy, confusion
 
-def evaluate_accuracy(sess, accuracy, confusion, data_handle, label_handle):
+def evaluate_accuracy(sess, accuracy, confusion):
     """ This function evaluates the accuracy of the model on the whole test set.
 
     Could be improved much further by potentially using the
@@ -305,21 +306,30 @@ def evaluate_accuracy(sess, accuracy, confusion, data_handle, label_handle):
 
     acc_list = []
     conf_list = []
+    batch_count = 1
     try:
         while 1:
-            # Eval batches
-            test_data_batch, test_label_batch = sess.run([data_handle, label_handle])
 
-            # Use batches to eval accuracy and append to acc_list and conf_list
-            acc_list.append(accuracy.eval({x: test_data_batch, y: test_label_batch}))
-            conf_list.append(confusion.eval({x: test_data_batch, y: test_label_batch}))
+            # Evaluate accuracy and confusion
+            acc, conf = sess.run([accuracy, confusion])
+
+            # Append accuracy and confidence to our lists
+            acc_list.append(acc)
+            conf_list.append(conf)
+
+            if (batch_count % 10 == 0):
+                print("Evaluating Accuracy for Test Batch " + str(batch_count))
+                
+            batch_count += 1
+
     except:
+
         # Print the final average of acc_list
         final_accuracy = sum(acc_list) / len(acc_list)
         print("Accuracy: " + str(final_accuracy))
 
         # Print the final confusion of conf_list
-        final_conf = helpers.add_2d_tensor_list(conf_list)
+        final_conf = add_2d_tensor_list(conf_list)
         print(final_conf)
 
     return final_accuracy, final_conf
@@ -501,14 +511,17 @@ def save_confusion_matrix(cm, path, classes, normalize=False,
     plt.xlabel('Predicted label')
 
     # Make the containing folder if not already made
-    if not os.path.exists(os.path.dirname(path)):
-        os.makedirs(os.path.dirname(path))
+    if not os.path.isdir(path):
+        os.makedirs(path)
 
     # Save the file
     if name == None:
         plt.savefig(os.path.join(path, 'confusion_matrix.png'))
     else:
         plt.savefig(os.path.join(path, name))
+
+    # Remove the plot from memory so it doesn't effect later plotting functions.
+    plt.clf()
 
 class Logger(object):
     """Logging in tensorboard without tensorflow ops.

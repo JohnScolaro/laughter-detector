@@ -39,6 +39,8 @@ get subversion control working													DONE
 no more feed dicts																DONE
 further optimize																DONE
 add name scopes to the mlp creation helper function
+	Currently have shitty name scopes. Fix.
+	Add a layer scope for each layers variables + ops.
 refactor the two confusion and accuracy calculation functions in helpers
 Dump accuracy at each epoch
 Dump audio
@@ -47,3 +49,7 @@ Dump audio
 Insert arbitrary images into TensorBoard
 	Embed confusion matrix plots into TensorBoard
 Why do pictures in tensorboard only have 10 images and not the full amount?
+Figure out cause of training slow down
+Fix small normalized confusion matrix bug
+make a real vs predicted laughter values graph in pyplot
+is accuracy actually being calculated correctly
