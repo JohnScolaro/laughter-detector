@@ -169,6 +169,68 @@ def input_pipeline(filename_list, batch_size, num_epochs, shuffle=False,
 
     return train_feature_batch, train_label_batch, test_feature_batch, test_label_batch
 
+#TODO Evaluate whether this is actually a good idea or not
+def input_pipeline2(filename_list, batch_size, train_test_split_method='file', train_test_ratio=0.85):
+
+    # Splits list of filenames into a training and test list with appropriate ratio
+    if train_test_split_method == 'file':
+        train_filename_list = list(filename_list)
+        test_filename_list = []
+        while (len(train_filename_list) / len(filename_list)) > train_test_ratio:
+            random.shuffle(train_filename_list)
+            test_filename_list.append(train_filename_list.pop())
+    else:
+        print("Not a valid train / test split method.")
+        exit(0)
+
+    # Define a `tf.contrib.data.Dataset` for iterating over one epoch of the data.
+    train_dataset = tf.contrib.data.TFRecordDataset(train_filename_list)
+    train_dataset = train_dataset.map(_parse_function)
+    train_dataset = train_dataset.batch(batch_size)
+    test_dataset = tf.contrib.data.TFRecordDataset(test_filename_list)
+    test_dataset = test_dataset.map(_parse_function)
+    test_dataset = test_dataset.batch(batch_size)
+
+    # Return an *initializable* iterator over the dataset, which will allow us to
+    # re-initialize it at the beginning of each epoch.
+    train_iter = train_dataset.make_initializable_iterator()
+    test_iter = test_dataset.make_initializable_iterator()
+
+    return train_iter, test_iter
+
+#TODO evaluate whether this is a good idea as well
+def _parse_function(proto):
+
+        test = tf.parse_single_example(proto, features={
+            'data': tf.FixedLenFeature([60], tf.float32),
+            'class': tf.FixedLenFeature([1], tf.int64),
+            'label': tf.FixedLenFeature([2], tf.int64)
+        })
+
+        data = test['data']
+        clip = tf.cast(test['class'], tf.int32)
+        labels = tf.cast(test['label'], tf.int32)
+
+        test2 = tf.contrib.data.read_batch_features(proto, features={
+            'data': tf.FixedLenFeature([60], tf.float32),
+            'class': tf.FixedLenFeature([1], tf.int64),
+            'label': tf.FixedLenFeature([2], tf.int64)
+        }, batch_size=5000, reader=create_reader)
+
+        data2 = test['data']
+        clip2 = tf.cast(test['class'], tf.int32)
+        labels2 = tf.cast(test['label'], tf.int32)
+
+        return data2, clip2, labels2
+
+def create_reader(filenames, num_records=1000, name='single_read_op'):
+    dataset_reader = tf.TFRecordReader(name='dataset_reader')
+
+    # Reads 1000 lines from the text file fetched from the filename_queue
+    dataset_key, dataset_value = dataset_reader.read_up_to(filenames, num_records=num_records, name=name)
+
+    return dataset_value
+
 def multilayer_perceptron(x_train, x_test, n_inputs, n_outputs, hidden_layers):
     """ Creates a multi layer perceptron for training.
 
@@ -335,6 +397,36 @@ def evaluate_accuracy(sess, accuracy, confusion):
         print(final_conf)
 
     return final_accuracy, final_conf
+
+#TODO: Impliment this shit properly
+def _get_streaming_metrics(prediction, label, num_classes):
+    """ A function which defines streaming accuracy and streaming confusion.
+
+    Call test_op for all batches in one epoch, then evaluate the confusion or
+    the accuracy to get their values. This calculates the accuracy and confusion
+    while keeping all calculation in the TensorFlow backend.
+    """
+
+    with tf.name_scope("test_batch_op"):
+        # the streaming accuracy (lookup and update tensors)
+        accuracy, accuracy_update = tf.metrics.accuracy(label, prediction,
+                name='accuracy')
+
+        # Compute a per-batch confusion
+        batch_confusion = tf.confusion_matrix(label, prediction,
+                num_classes=num_classes, name='batch_confusion')
+
+        # Create an accumulator variable to hold the counts
+        confusion = tf.Variable(tf.zeros([num_classes,num_classes],
+                dtype=tf.int32), name='confusion')
+
+        # Create the update op for doing a "+=" accumulation on the batch
+        confusion_update = confusion.assign(confusion + batch_confusion)
+
+        # Combine streaming accuracy and confusion matrix updates in one op
+        test_op = tf.group(accuracy_update, confusion_update)
+
+    return test_op, accuracy, confusion
 
 def load_data_into_ram():
     """ A function that loads all data into numpy arrays in RAM.
