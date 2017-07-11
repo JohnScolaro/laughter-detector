@@ -41,6 +41,7 @@ further optimize																DONE
 add name scopes to the mlp creation helper function								DONE
 	Currently have shitty name scopes. Fix.										DONE
 	Add a layer scope for each layers variables + ops.							NOT DONE - Seems they aren't actually used like this. Would require huge effort for no benefit.
+Tweak input pipeline for epoch control
 refactor the two confusion and accuracy calculation functions in helpers
 	By using streaming accuracy and confusion
 Dump accuracy at each epoch

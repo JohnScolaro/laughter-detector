@@ -58,7 +58,8 @@ merged_summaries = tf.summary.merge_all()
 writer = tf.summary.FileWriter(save_folder_name)
 
 # Create two handles for accuracy calculation
-accuracy, confusion = helpers.accuracy_calculation(mlp_test, test_label)
+accuracy, confusion = helpers.accuracy_and_confusion_calculation(mlp_test,
+        test_label)
 
 # Collect metadata about the train. Calc times, memory used, device, etc.
 run_metadata = tf.RunMetadata()
@@ -98,8 +99,11 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
             if batch % display_step == 0:
 
                 # Display some info about the current training session.
-                print("Batch number = {:d}. Epoch ~{:.3f}. Elapsed Time = {:.3f}s.".format(batch,
-                        batch * batch_size / lines_in_one_epoch, time.time() - start_time))
+                last_time = cur_time
+                cur_time = time.time()
+                print("Batch number = {:d}. Epoch ~{:.3f}. {:.3f}s per batch. Total Time = {:.3f}s.".format(batch,
+                        batch * batch_size / lines_in_one_epoch, (cur_time -
+                        last_time) / display_step, cur_time - start_time))
 
                 # Write data to summary's on each display batch
                 writer.add_run_metadata(run_metadata, 'batch' + str(batch))
