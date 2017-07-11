@@ -66,7 +66,8 @@ run_metadata = tf.RunMetadata()
 run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
 
 # Print time to launch main session
-print("Launching TensorFlow Session after " + str(time.time() -
+cur_time = time.time()
+print("Launching TensorFlow Session after " + str(cur_time -
         start_time) + " seconds.")
 
 # Launch the graph
