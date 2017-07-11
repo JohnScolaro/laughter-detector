@@ -34,13 +34,13 @@ n_hidden_2 = 50 # 2nd layer number of nodes
 n_input = 60 # Data input features
 n_classes = 2 # Output types. Either laughter or not laughter.
 
-# Construct input pipeline
+# Construct input pipelines
 data, label, test_data, test_label = helpers.input_pipeline(dataset_file_list,
         batch_size, training_epochs, shuffle=False, multithreaded=True,
         train_test_ratio=train_test_ratio)
 
 # Construct model
-mlp_train, mlp_test = helpers.multilayer_perceptron(data, test_data, n_input, n_classes, [50, 50, 50, 50])
+mlp_train, mlp_test = helpers.multilayer_perceptron(data, test_data, n_input, n_classes, [50, 20])
 
 # Define cost and optimizer
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=mlp_train,

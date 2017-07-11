@@ -236,15 +236,15 @@ def multilayer_perceptron(x_train, x_test, n_inputs, n_outputs, hidden_layers):
 
     # Set up the connections for the first layer
     cur_layer_num = 1
-    with tf.variable_scope("Layer1"):
-        cur_layer_train = tf.add(tf.matmul(x_train, weights['w1']), biases['b1'])
-        cur_layer_train = tf.nn.relu(cur_layer_train)
-        cur_layer_test = tf.add(tf.matmul(x_test, weights['w1']), biases['b1'])
-        cur_layer_test = tf.nn.relu(cur_layer_test)
-        tf.summary.image("Layer 1 Weights", tf.reshape(weights['w1'], [1, n_inputs, hidden_layers[0], 1]))
-        tf.summary.image("Layer 1 Biases", tf.reshape(biases['b1'], [1, 1, hidden_layers[0], 1]))
-        tf.summary.histogram("Layer 1 Weights", weights['w1'])
-        tf.summary.histogram("Layer 1 Biases", biases['b1'])
+    cur_layer_train = tf.add(tf.matmul(x_train, weights['w1']), biases['b1'])
+    cur_layer_train = tf.nn.relu(cur_layer_train)
+    cur_layer_test = tf.add(tf.matmul(x_test, weights['w1']), biases['b1'])
+    cur_layer_test = tf.nn.relu(cur_layer_test)
+    with tf.variable_scope("Layer_1_Summarys"):
+        tf.summary.image("Weights", tf.reshape(weights['w1'], [1, n_inputs, hidden_layers[0], 1]))
+        tf.summary.image("Biases", tf.reshape(biases['b1'], [1, 1, hidden_layers[0], 1]))
+        tf.summary.histogram("Weights", weights['w1'])
+        tf.summary.histogram("Biases", biases['b1'])
 
     # Set up the connections for the middle layers
     cur_layer_num = 2
@@ -255,43 +255,45 @@ def multilayer_perceptron(x_train, x_test, n_inputs, n_outputs, hidden_layers):
         cur_layer_test = tf.add(tf.matmul(cur_layer_test, weights['w' +
                 str(cur_layer_num)]), biases['b' + str(cur_layer_num)])
         cur_layer_test = tf.nn.relu(cur_layer_test)
-        tf.summary.image("Layer " + str(cur_layer_num) + " Weights",
-                tf.reshape(weights['w' + str(cur_layer_num)], [1,
-                hidden_layers[cur_layer_num - 2], layer, 1]))
-        tf.summary.image("Layer " + str(cur_layer_num) + " Biases",
-                tf.reshape(biases['b' + str(cur_layer_num)], [1, 1, layer, 1]))
-        tf.summary.histogram("Layer " + str(cur_layer_num) + " Weights",
-                weights['w' + str(cur_layer_num)])
-        tf.summary.histogram("Layer " + str(cur_layer_num) + " Biases",
-                biases['b' + str(cur_layer_num)])
+        with tf.variable_scope("Layer_" + str(cur_layer_num) + "_Summarys"):
+            tf.summary.image("Weights", tf.reshape(weights['w' +
+                    str(cur_layer_num)], [1, hidden_layers[cur_layer_num - 2],
+                    layer, 1]))
+            tf.summary.image("Biases", tf.reshape(biases['b' +
+                    str(cur_layer_num)], [1, 1, layer, 1]))
+            tf.summary.histogram("Weights", weights['w' + str(cur_layer_num)])
+            tf.summary.histogram("Biases", biases['b' + str(cur_layer_num)])
         cur_layer_num += 1
 
     # Set up the connections for the last layer
     cur_layer_train = tf.add(tf.matmul(cur_layer_train, weights['out']), biases['out'])
     cur_layer_test = tf.add(tf.matmul(cur_layer_test, weights['out']), biases['out'])
-    tf.summary.image("Output Weights", tf.reshape(weights['out'], [1, hidden_layers[-1], n_outputs, 1]))
-    tf.summary.image("Output Biases", tf.reshape(biases['out'], [1, 1, n_outputs, 1]))
-    tf.summary.histogram("Output Weights", weights['out'])
-    tf.summary.histogram("Output Biases", biases['out'])
+    with tf.variable_scope("Output_Summarys"):
+        tf.summary.image("Weights", tf.reshape(weights['out'], [1, hidden_layers[-1], n_outputs, 1]))
+        tf.summary.image("Biases", tf.reshape(biases['out'], [1, 1, n_outputs, 1]))
+        tf.summary.histogram("Weights", weights['out'])
+        tf.summary.histogram("Biases", biases['out'])
 
     return cur_layer_train, cur_layer_test
 
-def accuracy_calculation(mlp, y):
-    """ Adds the calculation of accuracy to the tensorflow graph.
+def accuracy_and_confusion_calculation(prediction, label):
+    """ Adds calculation of accuracy and confusion to the tensorflow graph.
 
+    These two functions are in the same function because they can re-use graph
+    nodes. Could maybe be seperated in the future.
     """
 
-    mlp_argmax = tf.argmax(mlp, 1, name='mlp_argmax')
-    label_argmax = tf.argmax(y, 1, name='label_argmax')
+    prediction_argmax = tf.argmax(prediction, 1, name='prediction_argmax')
+    label_argmax = tf.argmax(label, 1, name='label_argmax')
 
     # Test model
-    correct_prediction = tf.equal(mlp_argmax, label_argmax, name='equal')
+    correct_prediction = tf.equal(prediction_argmax, label_argmax, name='equal')
 
     # Calculate accuracy
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float",
             name='accuracy_cast_to_float'), name='accuracy_calculate_mean')
 
-    confusion = tf.confusion_matrix(mlp_argmax, label_argmax,
+    confusion = tf.confusion_matrix(prediction_argmax, label_argmax,
             name='confusion_matrix', num_classes=2)
 
     return accuracy, confusion
@@ -319,7 +321,7 @@ def evaluate_accuracy(sess, accuracy, confusion):
 
             if (batch_count % 10 == 0):
                 print("Evaluating Accuracy for Test Batch " + str(batch_count))
-                
+
             batch_count += 1
 
     except:

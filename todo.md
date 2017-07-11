@@ -38,11 +38,14 @@ rework input pipeline and file readers to use TFRecords							DONE
 get subversion control working													DONE
 no more feed dicts																DONE
 further optimize																DONE
-add name scopes to the mlp creation helper function
-	Currently have shitty name scopes. Fix.
-	Add a layer scope for each layers variables + ops.
+add name scopes to the mlp creation helper function								DONE
+	Currently have shitty name scopes. Fix.										DONE
+	Add a layer scope for each layers variables + ops.							NOT DONE - Seems they aren't actually used like this. Would require huge effort for no benefit.
 refactor the two confusion and accuracy calculation functions in helpers
+	By using streaming accuracy and confusion
 Dump accuracy at each epoch
+normalize deltas and delta-deltas in the training set
+Calculate specificity and sensitivity
 Dump audio
 	Dump laughter classified training audio
 	Dump laughter classified test audio
