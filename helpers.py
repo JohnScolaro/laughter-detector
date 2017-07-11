@@ -211,25 +211,7 @@ def _parse_function(proto):
         clip = tf.cast(test['class'], tf.int32)
         labels = tf.cast(test['label'], tf.int32)
 
-        test2 = tf.contrib.data.read_batch_features(proto, features={
-            'data': tf.FixedLenFeature([60], tf.float32),
-            'class': tf.FixedLenFeature([1], tf.int64),
-            'label': tf.FixedLenFeature([2], tf.int64)
-        }, batch_size=5000, reader=create_reader)
-
-        data2 = test['data']
-        clip2 = tf.cast(test['class'], tf.int32)
-        labels2 = tf.cast(test['label'], tf.int32)
-
-        return data2, clip2, labels2
-
-def create_reader(filenames, num_records=1000, name='single_read_op'):
-    dataset_reader = tf.TFRecordReader(name='dataset_reader')
-
-    # Reads 1000 lines from the text file fetched from the filename_queue
-    dataset_key, dataset_value = dataset_reader.read_up_to(filenames, num_records=num_records, name=name)
-
-    return dataset_value
+        return data, clip, labels
 
 def multilayer_perceptron(x_train, x_test, n_inputs, n_outputs, hidden_layers):
     """ Creates a multi layer perceptron for training.

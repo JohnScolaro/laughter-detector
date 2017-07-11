@@ -40,6 +40,9 @@ n_classes = 2 # Output types. Either laughter or not laughter.
 #        train_test_ratio=train_test_ratio)
 train_iter, test_iter = helpers.input_pipeline2(dataset_file_list, batch_size)
 
+data, clip, label = train_iter.get_next()
+test_data, test_clip, test_label = test_iter.get_next()
+
 # Construct model
 mlp_train, mlp_test = helpers.multilayer_perceptron(data, test_data, n_input, n_classes, [50, 20])
 
@@ -59,7 +62,8 @@ merged_summaries = tf.summary.merge_all()
 writer = tf.summary.FileWriter(save_folder_name)
 
 # Create two handles for accuracy calculation
-accuracy, confusion = helpers.accuracy_calculation(mlp_test, test_label)
+accuracy, confusion = helpers.accuracy_and_confusion_calculation(mlp_test,
+        test_label)
 
 # Collect metadata about the train. Calc times, memory used, device, etc.
 run_metadata = tf.RunMetadata()
@@ -77,6 +81,8 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
 
     # Initialize all system variables
     sess.run(init_op)
+    sess.run(train_iter.initializer)
+    sess.run(test_iter.initializer)
 
     # Start populating the filename queue.
     coord = tf.train.Coordinator()
