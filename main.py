@@ -102,6 +102,13 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
 
                 else:
 
+                # Display some info about the current training session.
+                last_time = cur_time
+                cur_time = time.time()
+                print("Batch number = {:d}. Epoch ~{:.3f}. {:.3f}s per batch. Total Time = {:.3f}s.".format(batch,
+                        batch * batch_size / lines_in_one_epoch, (cur_time -
+                        last_time) / display_step, cur_time - start_time))
+
                     # Run optimization op (backprop) and cost op with more info.
                     _, c, s = sess.run([optimizer, cost, merged_summaries],
                             options=run_options, run_metadata=run_metadata)

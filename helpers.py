@@ -88,7 +88,7 @@ def read_from_tfrecord(filename_list, num_epochs=None):
     dataset_reader = tf.TFRecordReader(name='dataset_reader')
 
     # Reads 1000 lines from the text file fetched from the filename_queue
-    dataset_key, dataset_value = dataset_reader.read_up_to(filename_queue, num_records=1000, name='single_read_op')
+    dataset_key, dataset_value = dataset_reader.read_up_to(filename_queue, num_records=1000, name='read_op')
 
     test = tf.parse_example(dataset_value, features={
         'data': tf.FixedLenFeature([60], tf.float32),
@@ -418,7 +418,6 @@ def evaluate_accuracy(sess, accuracy, confusion):
 
         # Print the final confusion of conf_list
         final_conf = add_2d_tensor_list(conf_list)
-        print(final_conf)
 
     return final_accuracy, final_conf
 
