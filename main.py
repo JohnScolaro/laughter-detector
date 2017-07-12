@@ -52,9 +52,7 @@ merged_summaries = tf.summary.merge_all()
 writer = tf.summary.FileWriter(save_folder_name)
 
 # Create handles for accuracy and confusion calculation
-#accuracy, confusion = helpers.accuracy_and_confusion_calculation(mlp_test,
-#        test_label)
-test_op, accuracy, confusion = helpers.streaming_accuracy_and_confusion_calculation(
+test_op, reset_op, accuracy, confusion = helpers.streaming_accuracy_and_confusion_calculation(
         test_label, mlp_test, n_classes)
 
 # Collect metadata about the train. Calc times, memory used, device, etc.
@@ -67,8 +65,8 @@ init_op = tf.group(tf.global_variables_initializer(),
 
 # Print time to launch main session
 cur_time = time.time()
-print("Launching TensorFlow Session after " + str(cur_time -
-        start_time) + " seconds.")
+print("Launching TensorFlow Session after {:.3f} seconds.".format(cur_time -
+        start_time))
 
 # Launch the graph
 with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
@@ -78,10 +76,6 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
 
     # Initialize all system variables
     sess.run(init_op)
-
-    # Start populating the filename queue.
-    #coord = tf.train.Coordinator()
-    #threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
     # Write the graph of the system to disk so we can view it later.
     writer.add_graph(sess.graph)
@@ -101,11 +95,16 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
             # Try to fetch a new batch. If there are none left, we are done.
             try:
 
-                # Run optimization op (backprop) and cost op (to get loss value)
-                _, c, s = sess.run([optimizer, cost, merged_summaries],
-                        options=run_options, run_metadata=run_metadata)
+                if batch % display_step != 0:
 
-                if batch % display_step == 0:
+                    # Run optimization op (backprop) and cost op.
+                    sess.run([optimizer, cost])
+
+                else:
+
+                    # Run optimization op (backprop) and cost op with more info.
+                    _, c, s = sess.run([optimizer, cost, merged_summaries],
+                            options=run_options, run_metadata=run_metadata)
 
                     # Display some info about the current training session.
                     last_time = cur_time
@@ -138,6 +137,9 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
                 helpers.save_confusion_matrix(conf, pics_save_path,
                         classes=['Not Laughter', 'Laughter'],
                         name='confusion_at_epoch_' + str(cur_epoch_num))
+
+                # Reset streaming metrics
+                sess.run(reset_op)
                 break
 
     # Now do all the end of training testing specific operations.
@@ -150,10 +152,6 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
     helpers.save_confusion_matrix(conf, pics_save_path,
             classes=['Not Laughter', 'Laughter'], normalize=True,
             name='final_norm_confusion_matrix')
-
-    # Stop the thread monitors. Only necessary when using the old input pipeline.
-    #coord.request_stop()
-    #coord.join(threads)
 
 # Finally, open our TensorBoard tab
 helpers.openTensorBoard(save_folder_name)

@@ -123,6 +123,19 @@ def input_pipeline(filename_list, batch_size, num_epochs, shuffle=False,
         train_test_split_method:
             'file': This is the default value. Splits data between the test and
                 train sets on a per-file basis.
+
+    This input pipeline requires that you have a coordinator to manage the
+    queue running threads. Start this at the beginning of training with:
+
+    # Start populating the filename queue.
+    coord = tf.train.Coordinator()
+    threads = tf.train.start_queue_runners(sess=sess, coord=coord)
+
+    And end it at the end of training with:
+
+    # Stop and wait for threads to finish.
+    coord.request_stop()
+    coord.join(threads)
     """
 
     # Splits list of filenames into a training and test list with appropriate ratio
@@ -423,18 +436,23 @@ def streaming_accuracy_and_confusion_calculation(label, prediction,
     prediction_argmax = tf.argmax(prediction, 1, name='prediction_argmax')
     label_argmax = tf.argmax(label, 1, name='label_argmax')
 
-    with tf.name_scope("test_batch_op"):
+    with tf.name_scope("test_batch_ops"):
+
         # the streaming accuracy (lookup and update tensors)
-        accuracy, accuracy_update = tf.metrics.accuracy(label_argmax, prediction_argmax,
-                name='accuracy')
+        accuracy, accuracy_update = tf.metrics.accuracy(label_argmax,
+                prediction_argmax, name='accuracy')
 
         # Compute a per-batch confusion
         batch_confusion = tf.confusion_matrix(label_argmax, prediction_argmax,
                 num_classes=num_classes, name='batch_confusion')
 
         # Create an accumulator variable to hold the counts
-        confusion = tf.Variable(tf.zeros([num_classes,num_classes],
+        confusion = tf.Variable(tf.zeros([num_classes, num_classes],
                 dtype=tf.int32), name='confusion')
+
+        reset_conf_op = tf.assign(confusion, tf.zeros([num_classes,
+                num_classes], name='reset_conf_zeros', dtype=tf.int32),
+                name='reset_conf_assign')
 
         # Create the update op for doing a "+=" accumulation on the batch
         confusion_update = confusion.assign(confusion + batch_confusion)
@@ -442,7 +460,11 @@ def streaming_accuracy_and_confusion_calculation(label, prediction,
         # Combine streaming accuracy and confusion matrix updates in one op
         test_op = tf.group(accuracy_update, confusion_update)
 
-    return test_op, accuracy, confusion
+    stream_vars = [i for i in tf.local_variables() if i.name.split('/')[0] == 'test_batch_ops']
+    reset_acc_op = tf.variables_initializer(stream_vars)
+    reset_op = tf.group(reset_acc_op, reset_conf_op)
+
+    return test_op, reset_op, accuracy, confusion
 
 def load_data_into_ram():
     """ A function that loads all data into numpy arrays in RAM.
