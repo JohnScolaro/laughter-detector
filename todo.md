@@ -41,19 +41,21 @@ further optimize																DONE
 add name scopes to the mlp creation helper function								DONE
 	Currently have shitty name scopes. Fix.										DONE
 	Add a layer scope for each layers variables + ops.							NOT DONE - Seems they aren't actually used like this. Would require huge effort for no benefit.
-Tweak input pipeline for epoch control
-refactor the two confusion and accuracy calculation functions in helpers
-	By using streaming accuracy and confusion
-Dump accuracy at each epoch
-normalize deltas and delta-deltas in the training set
-Calculate specificity and sensitivity
-Dump audio
-	Dump laughter classified training audio
-	Dump laughter classified test audio
-Insert arbitrary images into TensorBoard
-	Embed confusion matrix plots into TensorBoard
+refactor the two confusion and accuracy calculation functions in helpers		DONE
+	By using streaming accuracy and confusion									DONE
+	Fix streaming accuracy and conf, so that it is resetable.					DONE
+Dump accuracy at each epoch														DONE
+	Refactor input pipeline again												DONE
+normalize deltas and delta-deltas in the training set							
+Calculate specificity and sensitivity											
+Dump audio																		
+	Dump laughter classified training audio										
+	Dump laughter classified test audio											
+Insert arbitrary images into TensorBoard										
+	Embed confusion matrix plots into TensorBoard								
 Why do pictures in tensorboard only have 10 images and not the full amount?
-Figure out cause of training slow down
-Fix small normalized confusion matrix bug
-make a real vs predicted laughter values graph in pyplot
-is accuracy actually being calculated correctly
+Fix small normalized confusion matrix bug										DONE
+make a real vs predicted laughter values graph in pyplot						
+is accuracy actually being calculated correctly									DONE
+Why is training slowing down?
+	Test if my small fix fixed it.
