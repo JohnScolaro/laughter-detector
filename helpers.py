@@ -106,7 +106,7 @@ def input_pipeline(filename_list, batch_size, num_epochs, shuffle=False,
         multithreaded=True, train_test_ratio=0.85,
         train_test_split_method='file'):
 
-    """ Creates the input pipeline to generate train and test data from a csv.
+    """ Creates the input pipeline to generate train and test data from records.
 
     Options:
         filename_list: a list containing the file names of all csv files to be
@@ -169,7 +169,27 @@ def input_pipeline(filename_list, batch_size, num_epochs, shuffle=False,
 
     return train_feature_batch, train_label_batch, test_feature_batch, test_label_batch
 
-def input_pipeline2(filename_list, batch_size, train_test_split_method='file', train_test_ratio=0.85):
+def input_pipeline2(filename_list, batch_size, train_test_split_method='file',
+        train_test_ratio=0.85, shuffle=False):
+
+    """ Creates the input pipeline to generate train and test data from records.
+
+    This is the upgraded input_pipeline. It uses tf.contrib.data, and the new
+    TensorFlow methods in there to create an input pipeline, rather than the
+    old queue method.
+
+    Options:
+        filename_list: a list containing the file names of all csv files to be
+            used in this training run.
+        batch_size: The number of single records in a batch.
+        shuffle: If True, the records for each batch are chosen randomly. If
+            False, they are chosen roughly contiguously.
+        train_test_ratio: The fraction of training data / total data. Defaults
+            to 0.85, which is a 85% train 15% test split.
+        train_test_split_method:
+            'file': This is the default value. Splits data between the test and
+                train sets on a per-file basis.
+    """
 
     # Splits list of filenames into a training and test list with appropriate ratio
     if train_test_split_method == 'file':
@@ -191,6 +211,11 @@ def input_pipeline2(filename_list, batch_size, train_test_split_method='file', t
     test_dataset = test_dataset.batch(batch_size)
     test_dataset = test_dataset.map(_parse_function)
 
+    # Optionally shuffle
+    if shuffle == True:
+        train_dataset = train_dataset.shuffle(20000)
+        test_dataset = test_dataset.shuffle(20000)
+
     # Return an *initializable* iterator over the dataset, which will allow us to
     # re-initialize it at the beginning of each epoch.
     train_iter = train_dataset.make_initializable_iterator()
@@ -199,18 +224,23 @@ def input_pipeline2(filename_list, batch_size, train_test_split_method='file', t
     return train_iter, test_iter
 
 def _parse_function(proto):
+    """ Function mapping a structure of tensors to another structure of tensors.
 
-        test = tf.parse_example(proto, features={
-            'data': tf.FixedLenFeature([60], tf.float32),
-            'class': tf.FixedLenFeature([1], tf.int64),
-            'label': tf.FixedLenFeature([2], tf.int64)
-        })
+    I give it the protos from my tfrecord files, and it processes the binary
+    into three tensors. One for data, the clip, and the label.
+    """
 
-        data = test['data']
-        clip = tf.cast(test['class'], tf.int32)
-        labels = tf.cast(test['label'], tf.int32)
+    test = tf.parse_example(proto, features={
+        'data': tf.FixedLenFeature([60], tf.float32),
+        'class': tf.FixedLenFeature([1], tf.int64),
+        'label': tf.FixedLenFeature([2], tf.int64)
+    })
 
-        return data, clip, labels
+    data = test['data']
+    clip = tf.cast(test['class'], tf.int32)
+    labels = tf.cast(test['label'], tf.int32)
+
+    return data, clip, labels
 
 def multilayer_perceptron(x_train, x_test, n_inputs, n_outputs, hidden_layers):
     """ Creates a multi layer perceptron for training.
@@ -379,8 +409,9 @@ def evaluate_accuracy(sess, accuracy, confusion):
 
     return final_accuracy, final_conf
 
-#TODO: Impliment this shit properly
-def _get_streaming_metrics(prediction, label, num_classes):
+def streaming_accuracy_and_confusion_calculation(label, prediction,
+        num_classes):
+
     """ A function which defines streaming accuracy and streaming confusion.
 
     Call test_op for all batches in one epoch, then evaluate the confusion or
@@ -388,13 +419,17 @@ def _get_streaming_metrics(prediction, label, num_classes):
     while keeping all calculation in the TensorFlow backend.
     """
 
+    # Get the argmax of the labels and predictions.
+    prediction_argmax = tf.argmax(prediction, 1, name='prediction_argmax')
+    label_argmax = tf.argmax(label, 1, name='label_argmax')
+
     with tf.name_scope("test_batch_op"):
         # the streaming accuracy (lookup and update tensors)
-        accuracy, accuracy_update = tf.metrics.accuracy(label, prediction,
+        accuracy, accuracy_update = tf.metrics.accuracy(label_argmax, prediction_argmax,
                 name='accuracy')
 
         # Compute a per-batch confusion
-        batch_confusion = tf.confusion_matrix(label, prediction,
+        batch_confusion = tf.confusion_matrix(label_argmax, prediction_argmax,
                 num_classes=num_classes, name='batch_confusion')
 
         # Create an accumulator variable to hold the counts
@@ -597,6 +632,9 @@ def save_confusion_matrix(cm, path, classes, normalize=False,
 
     # Remove the plot from memory so it doesn't effect later plotting functions.
     plt.clf()
+
+def numpy_long_output():
+    np.set_printoptions(threshold=np.nan)
 
 class Logger(object):
     """Logging in tensorboard without tensorflow ops.
