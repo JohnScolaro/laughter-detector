@@ -169,7 +169,6 @@ def input_pipeline(filename_list, batch_size, num_epochs, shuffle=False,
 
     return train_feature_batch, train_label_batch, test_feature_batch, test_label_batch
 
-#TODO Evaluate whether this is actually a good idea or not
 def input_pipeline2(filename_list, batch_size, train_test_split_method='file', train_test_ratio=0.85):
 
     # Splits list of filenames into a training and test list with appropriate ratio
@@ -185,11 +184,12 @@ def input_pipeline2(filename_list, batch_size, train_test_split_method='file', t
 
     # Define a `tf.contrib.data.Dataset` for iterating over one epoch of the data.
     train_dataset = tf.contrib.data.TFRecordDataset(train_filename_list)
-    train_dataset = train_dataset.map(_parse_function)
     train_dataset = train_dataset.batch(batch_size)
+    train_dataset = train_dataset.map(_parse_function)
+
     test_dataset = tf.contrib.data.TFRecordDataset(test_filename_list)
-    test_dataset = test_dataset.map(_parse_function)
     test_dataset = test_dataset.batch(batch_size)
+    test_dataset = test_dataset.map(_parse_function)
 
     # Return an *initializable* iterator over the dataset, which will allow us to
     # re-initialize it at the beginning of each epoch.
@@ -198,10 +198,9 @@ def input_pipeline2(filename_list, batch_size, train_test_split_method='file', t
 
     return train_iter, test_iter
 
-#TODO evaluate whether this is a good idea as well
 def _parse_function(proto):
 
-        test = tf.parse_single_example(proto, features={
+        test = tf.parse_example(proto, features={
             'data': tf.FixedLenFeature([60], tf.float32),
             'class': tf.FixedLenFeature([1], tf.int64),
             'label': tf.FixedLenFeature([2], tf.int64)

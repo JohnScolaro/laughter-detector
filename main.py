@@ -35,16 +35,12 @@ n_input = 60 # Data input features
 n_classes = 2 # Output types. Either laughter or not laughter.
 
 # Construct input pipelines
-#data, label, test_data, test_label = helpers.input_pipeline(dataset_file_list,
-#        batch_size, training_epochs, shuffle=False, multithreaded=True,
-#        train_test_ratio=train_test_ratio)
 train_iter, test_iter = helpers.input_pipeline2(dataset_file_list, batch_size)
-
 data, clip, label = train_iter.get_next()
 test_data, test_clip, test_label = test_iter.get_next()
 
 # Construct model
-mlp_train, mlp_test = helpers.multilayer_perceptron(data, test_data, n_input, n_classes, [50, 20])
+mlp_train, mlp_test = helpers.multilayer_perceptron(data, test_data, n_input, n_classes, [50])
 
 # Define cost and optimizer
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=mlp_train,
@@ -82,44 +78,49 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
 
     # Initialize all system variables
     sess.run(init_op)
-    sess.run(train_iter.initializer)
-    sess.run(test_iter.initializer)
 
     # Start populating the filename queue.
-    coord = tf.train.Coordinator()
-    threads = tf.train.start_queue_runners(sess=sess, coord=coord)
+    #coord = tf.train.Coordinator()
+    #threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
     # Write the graph of the system to disk so we can view it later.
     writer.add_graph(sess.graph)
 
     # Training loop
     batch = 1
-    while 1:
+    for cur_epoch_num in range(training_epochs):
 
-        # Try to fetch a new batch. If there are none left, we are done.
-        try:
+        # Reinitialize input dataset
+        sess.run(train_iter.initializer)
+        sess.run(test_iter.initializer)
 
-            # Run optimization op (backprop) and cost op (to get loss value)
-            _, c, s = sess.run([optimizer, cost, merged_summaries],
-                    options=run_options, run_metadata=run_metadata)
+        while 1:
 
-            if batch % display_step == 0:
+            # Try to fetch a new batch. If there are none left, we are done.
+            try:
 
-                # Display some info about the current training session.
-                last_time = cur_time
-                cur_time = time.time()
-                print("Batch number = {:d}. Epoch ~{:.3f}. {:.3f}s per batch. Total Time = {:.3f}s.".format(batch,
-                        batch * batch_size / lines_in_one_epoch, (cur_time -
-                        last_time) / display_step, cur_time - start_time))
+                # Run optimization op (backprop) and cost op (to get loss value)
+                _, c, s = sess.run([optimizer, cost, merged_summaries],
+                        options=run_options, run_metadata=run_metadata)
 
-                # Write data to summary's on each display batch
-                writer.add_run_metadata(run_metadata, 'batch' + str(batch))
-                writer.add_summary(s, batch)
+                if batch % display_step == 0:
 
-        except tf.errors.OutOfRangeError:
-            break
+                    # Display some info about the current training session.
+                    last_time = cur_time
+                    cur_time = time.time()
+                    print("Batch number = {:d}. Epoch ~{:.3f}. {:.3f}s per batch. Total Time = {:.3f}s.".format(batch,
+                            batch * batch_size / lines_in_one_epoch, (cur_time -
+                            last_time) / display_step, cur_time - start_time))
 
-        batch = batch + 1
+                    # Write data to summary's on each display batch
+                    writer.add_run_metadata(run_metadata, 'batch' + str(batch))
+                    writer.add_summary(s, batch)
+
+            except tf.errors.OutOfRangeError:
+                print("This is where we will calculate the accuracy of the model.")
+                break
+
+            batch = batch + 1
 
     print("Training Completed in " + str(time.time() - start_time) + " seconds.")
 
@@ -131,8 +132,9 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
             classes=['Not Laughter', 'Laughter'], normalize=True,
             name='normalized_confusion_matrix')
 
-    coord.request_stop()
-    coord.join(threads)
+    # Stop the thread monitors. Only necessary when using the old input pipeline.
+    #coord.request_stop()
+    #coord.join(threads)
 
 # Finally, open our TensorBoard tab
 helpers.openTensorBoard(save_folder_name)
