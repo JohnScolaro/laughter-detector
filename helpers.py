@@ -255,7 +255,8 @@ def _parse_function(proto):
 
     return data, clip, labels
 
-def multilayer_perceptron(x_train, x_test, n_inputs, n_outputs, hidden_layers):
+def multilayer_perceptron(x_train, x_test, n_inputs, n_outputs, hidden_layers,
+        activation_function='relu', output_layer_biases=True):
     """ Creates a multi layer perceptron for training.
 
     This function creates a MLP for training all in one function. It creates
@@ -281,6 +282,8 @@ def multilayer_perceptron(x_train, x_test, n_inputs, n_outputs, hidden_layers):
         n_outputs: This is an integer. It is the number of outputs of the MLP.
         hidden_layers: This is a list of integers. It is the number of nodes
             in each hidden layer of the MLP.
+        activation_function: This is 'relu' by default but 'sigmoid' is also
+            supported. This is to choose the activation function between layers.
 
     Returns:
         out_layer_train: This is a handle for the output of the MLP from inputs
@@ -293,6 +296,17 @@ def multilayer_perceptron(x_train, x_test, n_inputs, n_outputs, hidden_layers):
     # Store layers weight & biases in dictionaries
     weights = {}
     biases = {}
+    sig = lambda x: tf.sigmoid(x)
+    relu = lambda x: tf.nn.relu(x)
+
+    # Select the appropriate activation function
+    if activation_function == 'relu':
+        op = relu
+    elif activation_function == 'sigmoid':
+        op = sig
+    else:
+        op = relu
+
 
     # Add the first layer to the dictionary
     cur_layer_num = 1
@@ -323,9 +337,9 @@ def multilayer_perceptron(x_train, x_test, n_inputs, n_outputs, hidden_layers):
     # Set up the connections for the first layer
     cur_layer_num = 1
     cur_layer_train = tf.add(tf.matmul(x_train, weights['w1']), biases['b1'])
-    cur_layer_train = tf.nn.relu(cur_layer_train)
+    cur_layer_train = op(cur_layer_train)
     cur_layer_test = tf.add(tf.matmul(x_test, weights['w1']), biases['b1'])
-    cur_layer_test = tf.nn.relu(cur_layer_test)
+    cur_layer_test = op(cur_layer_test)
     with tf.variable_scope("Layer_1_Summarys"):
         tf.summary.image("Weights", tf.reshape(weights['w1'], [1, n_inputs, hidden_layers[0], 1]))
         tf.summary.image("Biases", tf.reshape(biases['b1'], [1, 1, hidden_layers[0], 1]))
@@ -337,10 +351,10 @@ def multilayer_perceptron(x_train, x_test, n_inputs, n_outputs, hidden_layers):
     for layer in hidden_layers[1:]:
         cur_layer_train = tf.add(tf.matmul(cur_layer_train, weights['w' +
                 str(cur_layer_num)]), biases['b' + str(cur_layer_num)])
-        cur_layer_train = tf.nn.relu(cur_layer_train)
+        cur_layer_train = op(cur_layer_train)
         cur_layer_test = tf.add(tf.matmul(cur_layer_test, weights['w' +
                 str(cur_layer_num)]), biases['b' + str(cur_layer_num)])
-        cur_layer_test = tf.nn.relu(cur_layer_test)
+        cur_layer_test = op(cur_layer_test)
         with tf.variable_scope("Layer_" + str(cur_layer_num) + "_Summarys"):
             tf.summary.image("Weights", tf.reshape(weights['w' +
                     str(cur_layer_num)], [1, hidden_layers[cur_layer_num - 2],
@@ -352,8 +366,13 @@ def multilayer_perceptron(x_train, x_test, n_inputs, n_outputs, hidden_layers):
         cur_layer_num += 1
 
     # Set up the connections for the last layer
-    cur_layer_train = tf.add(tf.matmul(cur_layer_train, weights['out']), biases['out'])
-    cur_layer_test = tf.add(tf.matmul(cur_layer_test, weights['out']), biases['out'])
+    if output_layer_biases == True:
+        cur_layer_train = tf.add(tf.matmul(cur_layer_train, weights['out']), biases['out'])
+        cur_layer_test = tf.add(tf.matmul(cur_layer_test, weights['out']), biases['out'])
+    else:
+        cur_layer_train = tf.matmul(cur_layer_train, weights['out'])
+        cur_layer_test = tf.matmul(cur_layer_test, weights['out'])
+        
     with tf.variable_scope("Output_Summarys"):
         tf.summary.image("Weights", tf.reshape(weights['out'], [1, hidden_layers[-1], n_outputs, 1]))
         tf.summary.image("Biases", tf.reshape(biases['out'], [1, 1, n_outputs, 1]))

@@ -47,17 +47,22 @@ refactor the two confusion and accuracy calculation functions in helpers		DONE
 Dump accuracy at each epoch														DONE
 	Refactor input pipeline again												DONE
 Calculate specificity and sensitivity											DONE
-Change prints to print + log
-normalize deltas and delta-deltas in the training set							
-develop some more features
-Dump audio																		
-	Dump laughter classified training audio										
-	Dump laughter classified test audio											
-Insert arbitrary images into TensorBoard										
-	Embed confusion matrix plots into TensorBoard								
-Why do pictures in tensorboard only have 10 images and not the full amount?
-Fix small normalized confusion matrix bug										DONE
-make a real vs predicted laughter values graph in pyplot						
 is accuracy actually being calculated correctly									DONE
 Why is training slowing down?													MAYBE DONE
 	Test if my small fix fixed it.												MAYBE DONE
+Fix small normalized confusion matrix bug										DONE
+normalize deltas and delta-deltas in the training set							DONE
+play with hyper params															DONE
+Add additional activation functions to the mlp model							DONE
+find a way to fix the class imbalance  problem.									
+	boost the amount of laughter in the dataset									
+	increase the weight of the laughter currently in the set					
+		investigate tensorflows inbuilt metrics for this
+Change prints to print + log													
+develop some more features														
+Dump audio																		
+	Dump laughter classified training audio										
+	Dump laughter classified test audio											
+make a real vs predicted laughter values graph in pyplot						
+Maybe test adding some normalization per batch?									
+Fix summary writing bug??? Gone???												

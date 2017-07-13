@@ -22,16 +22,25 @@ for x in range(100):
 # Start up a logger to log misc variables.
 logger = helpers.Logger(save_folder_name)
 
-# System Parameters
-learning_rate = 0.001
-training_epochs = 30
+################################################################################
+
+# Hyper Parameters
+learning_rate = 0.01 #0.001
+beta1 = 0.9 #0.9
+beta2 = 0.999 #0.999
+epsilon = 1e-05 #1e-08
+
+# Network Params
+training_epochs = 20
 display_step = 50
 batch_size = 5000
 train_test_ratio = 0.85
+activation_function = 'relu'
+layers = [200, 60]
 n_input = 60 # Data input features
 n_classes = 2 # Output types. Either laughter or not laughter.
-lines_in_one_epoch = helpers.total_lines_in_all_tfrecord_files(
-        dataset_file_list) * train_test_ratio
+
+################################################################################
 
 # Construct input pipelines
 train_iter, test_iter = helpers.input_pipeline2(dataset_file_list, batch_size)
@@ -39,14 +48,15 @@ data, clip, label = train_iter.get_next()
 test_data, test_clip, test_label = test_iter.get_next()
 
 # Construct model
-mlp_train, mlp_test = helpers.multilayer_perceptron(data, test_data, n_input, n_classes, [200])
+mlp_train, mlp_test = helpers.multilayer_perceptron(data, test_data, n_input,
+        n_classes, layers, activation_function=activation_function)
 
 # Define cost and optimizer
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=mlp_train,
         labels=label), name="cost_op")
 tf.summary.scalar('cost', cost)
-optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate,
-        name='Adam_Optimizer').minimize(cost)
+optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate, beta1=beta1,
+        beta2=beta2, epsilon=epsilon, name='Adam_Optimizer').minimize(cost)
 
 # Collect all summaries into one handle and create a writer
 merged_summaries = tf.summary.merge_all()
