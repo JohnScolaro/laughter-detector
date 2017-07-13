@@ -46,8 +46,10 @@ refactor the two confusion and accuracy calculation functions in helpers		DONE
 	Fix streaming accuracy and conf, so that it is resetable.					DONE
 Dump accuracy at each epoch														DONE
 	Refactor input pipeline again												DONE
+Calculate specificity and sensitivity											DONE
+Change prints to print + log
 normalize deltas and delta-deltas in the training set							
-Calculate specificity and sensitivity											
+develop some more features
 Dump audio																		
 	Dump laughter classified training audio										
 	Dump laughter classified test audio											
@@ -57,5 +59,5 @@ Why do pictures in tensorboard only have 10 images and not the full amount?
 Fix small normalized confusion matrix bug										DONE
 make a real vs predicted laughter values graph in pyplot						
 is accuracy actually being calculated correctly									DONE
-Why is training slowing down?
-	Test if my small fix fixed it.
+Why is training slowing down?													MAYBE DONE
+	Test if my small fix fixed it.												MAYBE DONE

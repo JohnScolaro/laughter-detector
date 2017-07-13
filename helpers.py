@@ -465,6 +465,31 @@ def streaming_accuracy_and_confusion_calculation(label, prediction,
 
     return test_op, reset_op, accuracy, confusion
 
+def sensitivity_and_specificity(conf):
+    """ Calculates the sensitivity and specificity given a confusion matrix.
+
+    Takes a 2x2 matrix, where the columns represent predictions, and the rows
+    represent the true result. So the matrix looks like:
+
+    TN, FP
+    FN, TP
+
+    Where TN is true negative, and FP is false positive.
+
+    Sensitivity is TP/(TP + FN) and is the true positive rate.
+    Specificity is TN/(TN + FP) and is the true negative rate.
+    """
+
+    try:
+        assert np.shape(conf) == (2, 2)
+    except:
+        return None, None
+
+    sens = conf[1][1] / (conf[1][1] + conf[1][0])
+    spec = conf[0][0] / (conf[0][0] + conf[0][1])
+
+    return sens, spec
+
 def load_data_into_ram():
     """ A function that loads all data into numpy arrays in RAM.
 

@@ -4,6 +4,7 @@ import matplotlib as mpl
 import os
 import helpers
 import time
+import sys
 
 start_time = time.time()
 directory = os.path.dirname(__file__)
@@ -22,8 +23,8 @@ for x in range(100):
 logger = helpers.Logger(save_folder_name)
 
 # System Parameters
-learning_rate = 0.3
-training_epochs = 10
+learning_rate = 0.001
+training_epochs = 30
 display_step = 50
 batch_size = 5000
 train_test_ratio = 0.85
@@ -102,13 +103,6 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
 
                 else:
 
-                # Display some info about the current training session.
-                last_time = cur_time
-                cur_time = time.time()
-                print("Batch number = {:d}. Epoch ~{:.3f}. {:.3f}s per batch. Total Time = {:.3f}s.".format(batch,
-                        batch * batch_size / lines_in_one_epoch, (cur_time -
-                        last_time) / display_step, cur_time - start_time))
-
                     # Run optimization op (backprop) and cost op with more info.
                     _, c, s = sess.run([optimizer, cost, merged_summaries],
                             options=run_options, run_metadata=run_metadata)
@@ -144,13 +138,17 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
                 helpers.save_confusion_matrix(conf, pics_save_path,
                         classes=['Not Laughter', 'Laughter'],
                         name='confusion_at_epoch_' + str(cur_epoch_num))
+                sens, spec = helpers.sensitivity_and_specificity(conf)
+                print("Sensitivity: {:.3f}, Specificity: {:.3f}".format(sens, spec))
+                logger.log_scalar("Sensitivity", sens, cur_epoch_num)
+                logger.log_scalar("Specificity", spec, cur_epoch_num)
 
                 # Reset streaming metrics
                 sess.run(reset_op)
                 break
 
     # Now do all the end of training testing specific operations.
-    print("Training Completed in " + str(time.time() - start_time) + " seconds.")
+    print("Training Completed in {:.3f} seconds.".format(time.time() - start_time))
 
     # Save confusion matrices
     helpers.save_confusion_matrix(conf, pics_save_path,
