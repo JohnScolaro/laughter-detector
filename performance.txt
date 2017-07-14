@@ -1,6 +1,0 @@
-Using input pipeline v2.1
-    ~0.04s per batch
-Using input pipeline v3.0 - one record at a time
-    ~0.21s per batch
-Using input pipeline v3.1 - multi records at a time
-    ~0.06 per batch

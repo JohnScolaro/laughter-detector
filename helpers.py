@@ -372,12 +372,13 @@ def multilayer_perceptron(x_train, x_test, n_inputs, n_outputs, hidden_layers,
     else:
         cur_layer_train = tf.matmul(cur_layer_train, weights['out'])
         cur_layer_test = tf.matmul(cur_layer_test, weights['out'])
-        
+
     with tf.variable_scope("Output_Summarys"):
         tf.summary.image("Weights", tf.reshape(weights['out'], [1, hidden_layers[-1], n_outputs, 1]))
-        tf.summary.image("Biases", tf.reshape(biases['out'], [1, 1, n_outputs, 1]))
         tf.summary.histogram("Weights", weights['out'])
-        tf.summary.histogram("Biases", biases['out'])
+        if output_layer_biases == True:
+            tf.summary.image("Biases", tf.reshape(biases['out'], [1, 1, n_outputs, 1]))
+            tf.summary.histogram("Biases", biases['out'])
 
     return cur_layer_train, cur_layer_test
 

@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib as mpl
 import os
 import helpers
+import plotters
 import time
 import sys
 
@@ -25,18 +26,19 @@ logger = helpers.Logger(save_folder_name)
 ################################################################################
 
 # Hyper Parameters
-learning_rate = 0.01 #0.001
+learning_rate = 0.0001 #0.001
 beta1 = 0.9 #0.9
 beta2 = 0.999 #0.999
-epsilon = 1e-05 #1e-08
+epsilon = 1e-01 #1e-08
 
 # Network Params
-training_epochs = 20
+training_epochs = 30
 display_step = 50
 batch_size = 5000
 train_test_ratio = 0.85
-activation_function = 'relu'
-layers = [200, 60]
+activation_function = 'sigmoid'
+layers = [200]
+output_layer_biases = False
 n_input = 60 # Data input features
 n_classes = 2 # Output types. Either laughter or not laughter.
 
@@ -49,11 +51,13 @@ test_data, test_clip, test_label = test_iter.get_next()
 
 # Construct model
 mlp_train, mlp_test = helpers.multilayer_perceptron(data, test_data, n_input,
-        n_classes, layers, activation_function=activation_function)
+        n_classes, layers, activation_function=activation_function,
+        output_layer_biases=output_layer_biases)
 
 # Define cost and optimizer
+weighted_labels = tf.multiply(label, tf.constant([1, 31], dtype=tf.int32), name='add_weight_to_labels')
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=mlp_train,
-        labels=label), name="cost_op")
+        labels=weighted_labels, name="cost_op"))
 tf.summary.scalar('cost', cost)
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate, beta1=beta1,
         beta2=beta2, epsilon=epsilon, name='Adam_Optimizer').minimize(cost)
@@ -65,6 +69,9 @@ writer = tf.summary.FileWriter(save_folder_name)
 # Create handles for accuracy and confusion calculation
 test_op, reset_op, accuracy, confusion = helpers.streaming_accuracy_and_confusion_calculation(
         test_label, mlp_test, n_classes)
+
+# Create handles for probability visualisation.
+soft_mlp_test = tf.nn.softmax(mlp_test, name='test_softmax')
 
 # Collect metadata about the train. Calc times, memory used, device, etc.
 run_metadata = tf.RunMetadata()
@@ -156,6 +163,14 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
                 # Reset streaming metrics
                 sess.run(reset_op)
                 break
+
+        # Re-initialize the test data, so you can check again, to draw pics.
+        sess.run(test_iter.initializer)
+        for x in range(10):
+
+            lab, pred = sess.run([test_label, soft_mlp_test])
+            plotters.laughter_plotter(pred, lab, pics_save_path, x, 0.02,
+                    batch_size)
 
     # Now do all the end of training testing specific operations.
     print("Training Completed in {:.3f} seconds.".format(time.time() - start_time))

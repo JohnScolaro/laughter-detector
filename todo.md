@@ -54,10 +54,10 @@ Fix small normalized confusion matrix bug										DONE
 normalize deltas and delta-deltas in the training set							DONE
 play with hyper params															DONE
 Add additional activation functions to the mlp model							DONE
-find a way to fix the class imbalance  problem.									
-	boost the amount of laughter in the dataset									
-	increase the weight of the laughter currently in the set					
-		investigate tensorflows inbuilt metrics for this
+find a way to fix the class imbalance  problem.									DONE
+	boost the amount of laughter in the dataset									PROBABLY WONT DO BECAUSE THE BELOW OPTION WORKS
+	increase the weight of the laughter currently in the set					DONE
+Make logger and the other summary legger use the same writer.
 Change prints to print + log													
 develop some more features														
 Dump audio																		
