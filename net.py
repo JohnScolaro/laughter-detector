@@ -9,37 +9,67 @@ import sys
 
 ################################################################################
 
-name = "mlp_test"
+# If running this file:
+if len(sys.argv) < 2:
+    name = "mlp_test"
 
-# Hyper Parameters
-learning_rate = 0.0001 #0.001
-beta1 = 0.5 #0.9
-beta2 = 0.9 #0.999
-epsilon = 1e-08 #1e-08
+    # Hyper Parameters
+    learning_rate = 0.0001 #0.001
+    beta1 = 0.5 #0.9
+    beta2 = 0.9 #0.999
+    epsilon = 1e-08 #1e-08
 
-# Network Params
-training_epochs = 25
-display_step = 50
-batch_size = 5000
-train_test_ratio = 0.85
-activation_function = 'relu'
-layers = [200]
-output_layer_biases = False
-n_input = 60 # Data input features
-n_classes = 2 # Output types. Either laughter or not laughter.
+    # Network Params
+    training_epochs = 1
+    display_step = 50
+    batch_size = 5000
+    train_test_ratio = 0.85
+    activation_function = 'relu'
+    layers = [200]
+    output_layer_biases = False
+    n_input = 60 # Data input features
+    n_classes = 2 # Output types. Either laughter or not laughter.
 
 ################################################################################
+
+# Else, if running from script:
+else:
+    name = sys.argv[1]
+    learning_rate = float(sys.argv[2])
+    beta1 = float(sys.argv[3])
+    beta2 = float(sys.argv[4])
+    epsilon = float(sys.argv[5])
+    training_epochs = int(sys.argv[6])
+    display_step = int(sys.argv[7])
+    batch_size = int(sys.argv[8])
+    train_test_ratio = float(sys.argv[9])
+    activation_function = sys.argv[10]
+    layers = sys.argv[11].strip('[]').replace(' ', '').split(',')
+    for x in range(len(layers)):
+        layers[x] = int(layers[x])
+    output_layer_biases = "True"== sys.argv[12]
+    n_input = int(sys.argv[13])
+    n_classes = int(sys.argv[14])
 
 start_time = time.time()
 directory = os.path.dirname(__file__)
 save_folder_name = helpers.get_save_dir(os.path.join(directory, 'tensorboard'), name)
 pics_save_path = os.path.join(save_folder_name, 'pics')
-log_path = os.path.join(save_folder_name, 'logs')
+log_save_path = os.path.join(save_folder_name, 'log')
+
+# If running from another file, redirect output to a log file.
+if not os.path.isdir(save_folder_name):
+    os.makedirs(save_folder_name)
+if not os.path.isdir(log_save_path):
+    os.makedirs(log_save_path)
+if len(sys.argv) > 1:
+    stdout = sys.stdout
+    sys.stdout = open(os.path.join(log_save_path, 'log.txt'), 'w')
 
 # Make lists of valid dataset file names
 dataset_file_list = []
 for x in range(100):
-    name = os.path.join(directory, '../../Dataset/') + str(x) + "_dataset.tfrecord"
+    name = os.path.join(directory, '../Dataset/') + str(x) + "_dataset.tfrecord"
     if os.path.isfile(name):
         dataset_file_list.append(name)
 
@@ -185,5 +215,9 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
             classes=['Not Laughter', 'Laughter'], normalize=True,
             name='final_norm_confusion_matrix')
 
-# Finally, open our TensorBoard tab
-helpers.openTensorBoard(save_folder_name)
+# Finally, open our TensorBoard tab (If not being called from net_runner)
+if len(sys.argv) < 2:
+    helpers.openTensorBoard(save_folder_name)
+else:
+    sys.stdout.close()
+    sys.stdout = stdout

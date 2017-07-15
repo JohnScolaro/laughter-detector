@@ -25,7 +25,7 @@ def openTensorBoard(path, port = 6006):
     urlPath = 'http://localhost:' + str(port)
 
     # Kills any processes already running on the port we are going to start TensorBoard on.
-    killProcessOnPort(port)
+    _killProcessOnPort(port)
 
     # Create the TensorBoard process
     proc = subprocess.Popen(['tensorboard', '--logdir=' + path, '--port=' + str(port)])
@@ -36,7 +36,7 @@ def openTensorBoard(path, port = 6006):
     # Open the page in our default web browser
     webbrowser.open(urlPath)
 
-def killProcessOnPort(port):
+def _killProcessOnPort(port):
     """ Kills a process running on the specified port.
 
     This function kills a process running on the specified port. It should work
@@ -688,6 +688,11 @@ def save_confusion_matrix(cm, path, classes, normalize=False,
     plt.xlabel('Predicted label')
 
     # Make the containing folder if not already made
+    if not os.path.isdir(path):
+        os.makedirs(path)
+
+    # Make the conf container folder.
+    path = os.path.join(path, 'conf')
     if not os.path.isdir(path):
         os.makedirs(path)
 
