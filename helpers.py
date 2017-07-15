@@ -666,6 +666,7 @@ def save_confusion_matrix(cm, path, classes, normalize=False,
     Normalization can be applied by setting `normalize=True`.
     """
 
+    fig = plt.figure(figsize=(6, 5))
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
     plt.title(title)
     plt.colorbar()

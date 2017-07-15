@@ -18,7 +18,7 @@ def laughter_plotter(prediction, label, path, number, time_step, batch_size):
     see how accurate our function actually is visually.
     """
     prediction = np.transpose(prediction)[1]
-    label = np.transpose(label)[0]
+    label = np.transpose(label)[1]
 
     # Create 5000 by 1 vector of times
     times = np.linspace(0.0, float(batch_size * time_step), num=batch_size, endpoint=False)
@@ -26,20 +26,17 @@ def laughter_plotter(prediction, label, path, number, time_step, batch_size):
     fig = plt.figure(figsize=(15, 5))
 
     # Plot the laughter predictions.
-    plt.plot(times[0:400], prediction[0:400], 'b', linewidth=1)
+    plt.plot(times[0:500], prediction[0:500], 'b', linewidth=1)
 
     # Plot the labels.
-    plt.plot(times[0:400], label[0:400], 'k', linewidth=2)
+    plt.plot(times[0:500], label[0:500], 'k', linewidth=2)
 
     # Do custom pretty things like axis labels, legend, and colours.
-    plt.xlabel('X Label')
-    plt.ylabel('Y Label')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Probability (%)')
     blue_patch = mpatches.Patch(color='blue', label='Probability of Laughter')
     black_patch = mpatches.Patch(color='black', label='Data Labels')
     plt.legend(handles=[black_patch, blue_patch], loc=1)
-
-    # Show the matrix
-    # plt.show()
 
     # If the sound folder doesn't exist, make it.
     path = os.path.join(path, 'sound')

@@ -57,12 +57,14 @@ Add additional activation functions to the mlp model							DONE
 find a way to fix the class imbalance  problem.									DONE
 	boost the amount of laughter in the dataset									PROBABLY WONT DO BECAUSE THE BELOW OPTION WORKS
 	increase the weight of the laughter currently in the set					DONE
-Make logger and the other summary legger use the same writer.
+Make logger and the other summary logger use the same writer.
 Change prints to print + log													
-develop some more features														
+Develop some more features														
 Dump audio																		
 	Dump laughter classified training audio										
 	Dump laughter classified test audio											
-make a real vs predicted laughter values graph in pyplot						
+make a real vs predicted laughter values graph in pyplot						DONE
 Maybe test adding some normalization per batch?									
-Fix summary writing bug??? Gone???												
+Fix summary writing bug? Kill tensorboard when starting training to fix.
+Take the other column in the sound plot generator. The labels are opposite.		DONE
+Change the plot size back to the default for the confusion matrix generator.	DONE
