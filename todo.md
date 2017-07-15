@@ -54,7 +54,7 @@ Fix small normalized confusion matrix bug										DONE
 normalize deltas and delta-deltas in the training set							DONE
 play with hyper params															DONE
 Add additional activation functions to the mlp model							DONE
-find a way to fix the class imbalance  problem.									DONE
+find a way to fix the class imbalance problem.									DONE
 	boost the amount of laughter in the dataset									PROBABLY WONT DO BECAUSE THE BELOW OPTION WORKS
 	increase the weight of the laughter currently in the set					DONE
 Make logger and the other summary logger use the same writer.
@@ -68,3 +68,6 @@ Maybe test adding some normalization per batch?
 Fix summary writing bug? Kill tensorboard when starting training to fix.
 Take the other column in the sound plot generator. The labels are opposite.		DONE
 Change the plot size back to the default for the confusion matrix generator.	DONE
+Make another program which runs net.py multiple times with different param		DONE
+	Make it work well and give it a few tests.									
+Add dataset creation scripts to this repo										DONE

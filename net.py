@@ -7,9 +7,32 @@ import plotters
 import time
 import sys
 
+################################################################################
+
+name = "mlp_test"
+
+# Hyper Parameters
+learning_rate = 0.0001 #0.001
+beta1 = 0.5 #0.9
+beta2 = 0.9 #0.999
+epsilon = 1e-08 #1e-08
+
+# Network Params
+training_epochs = 25
+display_step = 50
+batch_size = 5000
+train_test_ratio = 0.85
+activation_function = 'relu'
+layers = [200]
+output_layer_biases = False
+n_input = 60 # Data input features
+n_classes = 2 # Output types. Either laughter or not laughter.
+
+################################################################################
+
 start_time = time.time()
 directory = os.path.dirname(__file__)
-save_folder_name = helpers.get_save_dir(os.path.join(directory, 'tensorboard'), "mlp_test")
+save_folder_name = helpers.get_save_dir(os.path.join(directory, 'tensorboard'), name)
 pics_save_path = os.path.join(save_folder_name, 'pics')
 log_path = os.path.join(save_folder_name, 'logs')
 
@@ -23,27 +46,6 @@ for x in range(100):
 # Start up a logger to log misc variables.
 logger = helpers.Logger(save_folder_name)
 
-################################################################################
-
-# Hyper Parameters
-learning_rate = 0.0001 #0.001
-beta1 = 0.9 #0.9
-beta2 = 0.999 #0.999
-epsilon = 1e-01 #1e-08
-
-# Network Params
-training_epochs = 30
-display_step = 50
-batch_size = 5000
-train_test_ratio = 0.85
-activation_function = 'sigmoid'
-layers = [200]
-output_layer_biases = False
-n_input = 60 # Data input features
-n_classes = 2 # Output types. Either laughter or not laughter.
-
-################################################################################
-
 # Construct input pipelines
 train_iter, test_iter = helpers.input_pipeline2(dataset_file_list, batch_size)
 data, clip, label = train_iter.get_next()
@@ -55,7 +57,7 @@ mlp_train, mlp_test = helpers.multilayer_perceptron(data, test_data, n_input,
         output_layer_biases=output_layer_biases)
 
 # Define cost and optimizer
-weighted_labels = tf.multiply(label, tf.constant([1, 31], dtype=tf.int32), name='add_weight_to_labels')
+weighted_labels = tf.multiply(label, tf.constant([1, 25], dtype=tf.int32), name='add_weight_to_labels')
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=mlp_train,
         labels=weighted_labels, name="cost_op"))
 tf.summary.scalar('cost', cost)
