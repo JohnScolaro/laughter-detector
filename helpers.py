@@ -704,6 +704,7 @@ def save_confusion_matrix(cm, path, classes, normalize=False,
 
     # Remove the plot from memory so it doesn't effect later plotting functions.
     plt.clf()
+    plt.close(fig)
 
 def numpy_long_output():
     np.set_printoptions(threshold=np.nan)

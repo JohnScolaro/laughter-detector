@@ -46,3 +46,4 @@ def laughter_plotter(prediction, label, path, number, time_step, batch_size):
     # Save plot, and clear from memory.
     plt.savefig(os.path.join(path, 'classification' + str(number) + '.png'))
     plt.clf()
+    plt.close(fig)

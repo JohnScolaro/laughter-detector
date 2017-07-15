@@ -58,7 +58,7 @@ find a way to fix the class imbalance problem.									DONE
 	boost the amount of laughter in the dataset									PROBABLY WONT DO BECAUSE THE BELOW OPTION WORKS
 	increase the weight of the laughter currently in the set					DONE
 Make logger and the other summary logger use the same writer.
-Change prints to print + log													
+Change prints to print + log													DONE
 Develop some more features														
 Dump audio																		
 	Dump laughter classified training audio										
@@ -69,5 +69,10 @@ Fix summary writing bug? Kill tensorboard when starting training to fix.
 Take the other column in the sound plot generator. The labels are opposite.		DONE
 Change the plot size back to the default for the confusion matrix generator.	DONE
 Make another program which runs net.py multiple times with different param		DONE
-	Make it work well and give it a few tests.									
+	Make it work well and give it a few tests.									DONE
+	Clean it all up. Make helper functions to reduce code.
+	Remove a few of the instances of code where you make folders if they dont exist.
 Add dataset creation scripts to this repo										DONE
+Make a "print_hyper_params" function.
+Reroute stderr as well as stdout												DONE
+Make sensitivity and specificity a class, so you can get max at end of run

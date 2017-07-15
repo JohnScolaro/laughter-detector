@@ -63,8 +63,9 @@ if not os.path.isdir(save_folder_name):
 if not os.path.isdir(log_save_path):
     os.makedirs(log_save_path)
 if len(sys.argv) > 1:
+    stderr = sys.stderr
     stdout = sys.stdout
-    sys.stdout = open(os.path.join(log_save_path, 'log.txt'), 'w')
+    sys.stderr = sys.stdout = open(os.path.join(log_save_path, 'log.txt'), 'w')
 
 # Make lists of valid dataset file names
 dataset_file_list = []
@@ -221,3 +222,4 @@ if len(sys.argv) < 2:
 else:
     sys.stdout.close()
     sys.stdout = stdout
+    sys.stderr = stderr
