@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 
 # Make a hyper parameter dict
 param_dict = {
@@ -52,6 +53,7 @@ def run_net(name, argv):
     for x in range(3):
         print("Starting {:s}, run {:d}.".format(name, x))
         os.system("net.py " + argv)
+        time.sleep(1)
 
 def main():
 

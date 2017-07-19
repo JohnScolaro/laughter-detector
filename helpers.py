@@ -716,9 +716,12 @@ class Logger(object):
     just random numbers, or other things not related to the tensorflow graph.
     """
 
-    def __init__(self, log_dir):
+    def __init__(self, log_dir, writer=None):
         """Creates a summary writer logging to log_dir."""
-        self.writer = tf.summary.FileWriter(log_dir)
+        if writer == None:
+            self.writer = tf.summary.FileWriter(log_dir)
+        else:
+            self.writer = writer
 
     def log_scalar(self, tag, value, step):
         """Log a scalar variable.

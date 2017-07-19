@@ -57,6 +57,11 @@ save_folder_name = helpers.get_save_dir(os.path.join(directory, 'tensorboard'), 
 pics_save_path = os.path.join(save_folder_name, 'pics')
 log_save_path = os.path.join(save_folder_name, 'log')
 
+# Close any other local sessions if there are any.
+if 'session' in locals() and session is not None:
+    print('Close interactive session')
+    session.close()
+
 # If running from another file, redirect output to a log file.
 if not os.path.isdir(save_folder_name):
     os.makedirs(save_folder_name)
@@ -73,9 +78,6 @@ for x in range(100):
     name = os.path.join(directory, '../Dataset/') + str(x) + "_dataset.tfrecord"
     if os.path.isfile(name):
         dataset_file_list.append(name)
-
-# Start up a logger to log misc variables.
-logger = helpers.Logger(save_folder_name)
 
 # Construct input pipelines
 train_iter, test_iter = helpers.input_pipeline2(dataset_file_list, batch_size)
@@ -98,6 +100,9 @@ optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate, beta1=beta1,
 # Collect all summaries into one handle and create a writer
 merged_summaries = tf.summary.merge_all()
 writer = tf.summary.FileWriter(save_folder_name)
+
+# Start up a logger to log misc variables.
+logger = helpers.Logger(save_folder_name, writer)
 
 # Create handles for accuracy and confusion calculation
 test_op, reset_op, accuracy, confusion = helpers.streaming_accuracy_and_confusion_calculation(
@@ -199,7 +204,7 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
 
         # Re-initialize the test data, so you can check again, to draw pics.
         sess.run(test_iter.initializer)
-        for x in range(10):
+        for x in range(50):
 
             lab, pred = sess.run([test_label, soft_mlp_test])
             plotters.laughter_plotter(pred, lab, pics_save_path, x, 0.02,
