@@ -103,6 +103,7 @@ writer = tf.summary.FileWriter(save_folder_name)
 
 # Start up a logger to log misc variables.
 logger = helpers.Logger(save_folder_name, writer)
+metrics = helpers.Metrics()
 
 # Create handles for accuracy and confusion calculation
 test_op, reset_op, accuracy, confusion = helpers.streaming_accuracy_and_confusion_calculation(
@@ -193,7 +194,7 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
                 helpers.save_confusion_matrix(conf, pics_save_path,
                         classes=['Not Laughter', 'Laughter'],
                         name='confusion_at_epoch_' + str(cur_epoch_num))
-                sens, spec = helpers.sensitivity_and_specificity(conf)
+                sens, spec = metrics.sensitivity_and_specificity(conf)
                 print("Sensitivity: {:.3f}, Specificity: {:.3f}".format(sens, spec))
                 logger.log_scalar("Sensitivity", sens, cur_epoch_num)
                 logger.log_scalar("Specificity", spec, cur_epoch_num)
@@ -212,6 +213,9 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
 
     # Now do all the end of training testing specific operations.
     print("Training Completed in {:.3f} seconds.".format(time.time() - start_time))
+
+    sens, spec, epoch = metrics.get_max_sensitivity_and_specificity()
+    print("Best test run was epoch {:d} of {:d} with a sensitivity of {:.3f}, and specificity of {:.3f}.".format(epoch, training_epochs, sens, spec))
 
     # Save confusion matrices
     helpers.save_confusion_matrix(conf, pics_save_path,

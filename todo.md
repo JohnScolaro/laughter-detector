@@ -57,7 +57,7 @@ Add additional activation functions to the mlp model							DONE
 find a way to fix the class imbalance problem.									DONE
 	boost the amount of laughter in the dataset									PROBABLY WONT DO BECAUSE THE BELOW OPTION WORKS
 	increase the weight of the laughter currently in the set					DONE
-Make logger and the other summary logger use the same writer.
+Make logger and the other summary logger use the same writer.					DONE
 Change prints to print + log													DONE
 Develop some more features														
 Dump audio																		
@@ -65,7 +65,7 @@ Dump audio
 	Dump laughter classified test audio											
 make a real vs predicted laughter values graph in pyplot						DONE
 Maybe test adding some normalization per batch?									
-Fix summary writing bug? Kill tensorboard when starting training to fix.
+Fix summary writing bug? Kill tensorboard when starting training to fix.		MAYBE DONE?
 Take the other column in the sound plot generator. The labels are opposite.		DONE
 Change the plot size back to the default for the confusion matrix generator.	DONE
 Make another program which runs net.py multiple times with different param		DONE
@@ -76,3 +76,4 @@ Add dataset creation scripts to this repo										DONE
 Make a "print_hyper_params" function.
 Reroute stderr as well as stdout												DONE
 Make sensitivity and specificity a class, so you can get max at end of run
+Move confusion matrix maker to the plotters file

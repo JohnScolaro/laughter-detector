@@ -485,31 +485,6 @@ def streaming_accuracy_and_confusion_calculation(label, prediction,
 
     return test_op, reset_op, accuracy, confusion
 
-def sensitivity_and_specificity(conf):
-    """ Calculates the sensitivity and specificity given a confusion matrix.
-
-    Takes a 2x2 matrix, where the columns represent predictions, and the rows
-    represent the true result. So the matrix looks like:
-
-    TN, FP
-    FN, TP
-
-    Where TN is true negative, and FP is false positive.
-
-    Sensitivity is TP/(TP + FN) and is the true positive rate.
-    Specificity is TN/(TN + FP) and is the true negative rate.
-    """
-
-    try:
-        assert np.shape(conf) == (2, 2)
-    except:
-        return None, None
-
-    sens = conf[1][1] / (conf[1][1] + conf[1][0])
-    spec = conf[0][0] / (conf[0][0] + conf[0][1])
-
-    return sens, spec
-
 def load_data_into_ram():
     """ A function that loads all data into numpy arrays in RAM.
 
@@ -709,6 +684,51 @@ def save_confusion_matrix(cm, path, classes, normalize=False,
 def numpy_long_output():
     np.set_printoptions(threshold=np.nan)
 
+class Metrics(object):
+    """ An object containing metrics through a number of epochs.
+
+    """
+
+    def __init__(self):
+        self.sensitivity_and_specificity_list = []
+
+    def sensitivity_and_specificity(self, conf):
+        """ Calculates the sensitivity and specificity given a confusion matrix.
+
+        Takes a 2x2 matrix, where the columns represent predictions, and the rows
+        represent the true result. So the matrix looks like:
+
+        TN, FP
+        FN, TP
+
+        Where TN is true negative, and FP is false positive.
+
+        Sensitivity is TP/(TP + FN) and is the true positive rate.
+        Specificity is TN/(TN + FP) and is the true negative rate.
+        """
+
+        try:
+            assert np.shape(conf) == (2, 2)
+        except:
+            return None, None
+
+        sens = conf[1][1] / (conf[1][1] + conf[1][0])
+        spec = conf[0][0] / (conf[0][0] + conf[0][1])
+
+        self.sensitivity_and_specificity_list.append((sens, spec))
+
+        return sens, spec
+
+    def get_max_sensitivity_and_specificity(self):
+        maximum = (0.0, 0.0, 0)
+        epoch = 0
+        for sens, spec in self.sensitivity_and_specificity_list:
+            if (sens + spec) > (maximum[0] + maximum[1]):
+                maximum = (sens, spec, epoch)
+            epoch += 1
+
+        return maximum
+
 class Logger(object):
     """Logging in tensorboard without tensorflow ops.
 
@@ -734,7 +754,7 @@ class Logger(object):
             training iteration
         """
         summary = tf.Summary(value=[tf.Summary.Value(tag=tag,
-                                                     simple_value=value)])
+                simple_value=value)])
         self.writer.add_summary(summary, step)
 
     def log_images(self, tag, images, step):
