@@ -1,4 +1,25 @@
 import xml.etree.ElementTree
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.mlab as mlab
+
+def histogram(data_list):
+	x = np.array(data_list)
+
+	fig = plt.figure()
+	ax = fig.add_subplot(1, 1, 1)
+	ax.set_axisbelow(True)
+
+	# the histogram of the data
+	n, bins, patches = plt.hist(x, 40, normed=1, facecolor='green', alpha=0.75, ec='black')
+
+	plt.xlabel('Time (ms)')
+	plt.ylabel('Frequency')
+	plt.title('Histogram of Laughter Lengths')
+	plt.grid(True, linestyle='--')
+	plt.rcParams['grid.linestyle'] = "--"
+
+	plt.show()
 
 def main():
 	# A counter to find total laugh count
@@ -21,6 +42,7 @@ def main():
 
 	# For every file
 	for f in list_of_files:
+
 		# Create a file to open and write laughter times to
 		new_file = open(f.rsplit('.', 1)[0] + ".ltimes", 'w');
 
@@ -35,8 +57,8 @@ def main():
 					start_stop_flag = 1
 					# The laugh started at this time
 					start_of_laugh = int(timeslot.attrib['TIME_VALUE'])
-					# Write this to our new fil
-e					new_file.write(str(start_of_laugh) + ",")
+					# Write this to our new file
+					new_file.write(str(start_of_laugh) + ",")
 				else:
 					# The next laugh time is the start of the next laugh
 					start_stop_flag = 0
@@ -65,9 +87,10 @@ e					new_file.write(str(start_of_laugh) + ",")
 	print("Total laugh count: " + str(counter))
 	print("Total length of laughter: " + str(length / 1000) + " seconds.")
 	print("The longest laugh goes for: " + str(max_laugh_length / 1000) + " seconds.")
-	print("The average length of a laughter segment is: " + str(sum(laughter_list) / len(laughter_list)) + " milliseconds.")
+	print("The average length of a laughter segment is: {:.2f} milliseconds.".format(sum(laughter_list) / len(laughter_list)))
 	print("The file with the least laughs has " + str(min_laughs_per_file) + " in it.")
 	print("The file with the most laughs has " + str(max_laughs_per_file) + " in it.")
+	histogram(laughter_list)
 
 # Create our list of files
 our_range = range(81)

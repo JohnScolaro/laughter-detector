@@ -73,7 +73,12 @@ Make another program which runs net.py multiple times with different param		DONE
 	Clean it all up. Make helper functions to reduce code.
 	Remove a few of the instances of code where you make folders if they dont exist.
 Add dataset creation scripts to this repo										DONE
-Make a "print_hyper_params" function.
+Make a "print_hyper_params" function.											TEST TO SEE IF DONE
 Reroute stderr as well as stdout												DONE
-Make sensitivity and specificity a class, so you can get max at end of run
+Make sensitivity and specificity a class, so you can get max at end of run		DONE
 Move confusion matrix maker to the plotters file
+Attempt to make a rnn in another file
+	Learn how rnns's work in tensorflow
+		Funky input data requirements.
+	Check out LTSM's while you're at it.
+Add equal error rate, and other metrics to the metrics class?
