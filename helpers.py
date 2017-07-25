@@ -255,6 +255,61 @@ def _parse_function(proto):
 
     return data, clip, labels
 
+def input_pipeline_data_sequence_creator(data, label, batch_size, window_length, num_features, num_classes):
+    """ Takes a batch of data and labels, and creates a batch of sequences.
+
+    This function takes a batch (should be consecutive or the sequences won't
+    make any sense) and spits out a series of consecutive sequences made by
+    sliding a window over consecutive records of the batch. The sequences are
+    'window_length' in length.
+
+    For example, the origional data is sized: [batch_size, num_features] which
+    is a 2D matrix of batch_size consecutive records. This function transforms
+    this into a 3D matrix of [batch_size, window_length, num_features] where
+    batch_size is now: (origional batch_size - window_length + 1).
+
+    EG:
+    origional batch:
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 9],
+    [10, 11, 12],
+    [13, 14, 15]
+    Here, the batch_size = 5, and num_features = 3.
+
+    With a window_length of 3, this becomes:
+    [
+      [1, 2, 3],
+      [4, 5, 6],
+      [7, 8, 9]
+    ],
+    [
+      [4, 5, 6],
+      [7, 8, 9],
+      [10, 11, 12]
+    ],
+    [
+      [7, 8, 9],
+      [10, 11, 12],
+      [13, 14, 15]
+    ]
+
+    As you can see, the size has increased from [5, 3] to [3, 3, 3].
+
+    As for the labels, we simply select the labels of the origional set, but
+    chop off (window_length // 2) elements from the start and end of the vector
+    to ensure the label length is:
+    [origional batch_size - window_length + 1, num_classes].
+    """
+
+    list_of_windows_of_data = []
+    for x in range(batch_size - window_length + 1):
+        list_of_windows_of_data.append(tf.slice(data, [x, 0], [window_length, num_features]))
+    windowed_data = tf.squeeze(tf.stack(list_of_windows_of_data, axis=0))
+    windowed_labels = tf.slice(label, [window_length // 2, 0], [batch_size - window_length + 1, num_classes])
+
+    return windowed_data, windowed_labels
+
 def multilayer_perceptron(x_train, x_test, n_inputs, n_outputs, hidden_layers,
         activation_function='relu', output_layer_biases=True):
     """ Creates a multi layer perceptron for training.
@@ -680,6 +735,28 @@ def save_confusion_matrix(cm, path, classes, normalize=False,
     # Remove the plot from memory so it doesn't effect later plotting functions.
     plt.clf()
     plt.close(fig)
+
+def print_system_params(argv):
+
+    param_dict_keylist = [
+            "name",
+            "learning_rate",
+            "beta1",
+            "beta2",
+            "epsilon",
+            "training_epochs",
+            "display_step",
+            "batch_size",
+            "train_test_ratio",
+            "activation_function",
+            "layers",
+            "output_layer_biases",
+            "n_input",
+            "n_classes"
+    ]
+
+    for x in range(14):
+        print(param_dict_keylist[x] + ": " + argv[x + 1])
 
 def numpy_long_output():
     np.set_printoptions(threshold=np.nan)

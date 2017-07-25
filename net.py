@@ -44,7 +44,7 @@ else:
     batch_size = int(sys.argv[8])
     train_test_ratio = float(sys.argv[9])
     activation_function = sys.argv[10]
-    layers = sys.argv[11].strip('[]').replace(' ', '').split(',')
+    layers = sys.argv[11].strip('[]').split('-')
     for x in range(len(layers)):
         layers[x] = int(layers[x])
     output_layer_biases = "True"== sys.argv[12]
@@ -119,6 +119,9 @@ run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
 # Initializing local and global variables
 init_op = tf.group(tf.global_variables_initializer(),
         tf.local_variables_initializer())
+
+# Print system params
+helpers.print_system_params(sys.argv)
 
 # Print time to launch main session
 cur_time = time.time()
@@ -215,7 +218,7 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
     print("Training Completed in {:.3f} seconds.".format(time.time() - start_time))
 
     sens, spec, epoch = metrics.get_max_sensitivity_and_specificity()
-    print("Best test run was epoch {:d} of {:d} with a sensitivity of {:.3f}, and specificity of {:.3f}.".format(epoch, training_epochs, sens, spec))
+    print("Best test run was epoch {:d} of {:d} with a sensitivity of {:.3f}, and specificity of {:.3f}.".format(epoch + 1, training_epochs, sens, spec))
 
     # Save confusion matrices
     helpers.save_confusion_matrix(conf, pics_save_path,

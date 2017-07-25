@@ -81,4 +81,7 @@ Attempt to make a rnn in another file
 	Learn how rnns's work in tensorflow
 		Funky input data requirements.
 	Check out LTSM's while you're at it.
+	Also add a MLP with multiple frames at once.
 Add equal error rate, and other metrics to the metrics class?
+Try normalizing each layer of the mlp
+Try shuffling, and see if it helps.
