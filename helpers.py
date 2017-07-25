@@ -12,6 +12,10 @@ import itertools
 import io
 import random
 
+################################################################################
+# TensorBoard
+################################################################################
+
 def openTensorBoard(path, port = 6006):
     """ Opens TensorBoard
 
@@ -71,6 +75,10 @@ def _killProcessOnPort(port):
             if match:
                 pid = match.group('pid')
                 subprocess.Popen(['kill', '-9', pid])
+
+################################################################################
+# Input Pipeline
+################################################################################
 
 def read_from_tfrecord(filename_list, num_epochs=None):
     """ Reads data from a number of tfrecords into supported tensors.
@@ -310,6 +318,10 @@ def input_pipeline_data_sequence_creator(data, label, batch_size, window_length,
 
     return windowed_data, windowed_labels
 
+################################################################################
+# Models
+################################################################################
+
 def multilayer_perceptron(x_train, x_test, n_inputs, n_outputs, hidden_layers,
         activation_function='relu', output_layer_biases=True):
     """ Creates a multi layer perceptron for training.
@@ -361,7 +373,6 @@ def multilayer_perceptron(x_train, x_test, n_inputs, n_outputs, hidden_layers,
         op = sig
     else:
         op = relu
-
 
     # Add the first layer to the dictionary
     cur_layer_num = 1
@@ -436,6 +447,133 @@ def multilayer_perceptron(x_train, x_test, n_inputs, n_outputs, hidden_layers,
             tf.summary.histogram("Biases", biases['out'])
 
     return cur_layer_train, cur_layer_test
+
+def sequence_mlp(x_train, x_test, n_features, window_length, n_outputs,
+        batch_size, hidden_layers, activation_function='relu',
+        output_layer_biases=True):
+    """ Creates an MLP for multiple data frames at once.
+
+    The goal of this function is to mimic the multilayer_perceptron function in
+    this file in terms of functionality and usage, but it needs some small
+    modifications to the first layer, to attach it correctly the modified input
+    pipeline for sequential data.
+
+    This function creates a MLP for training all in one function. It creates
+    nodes with weights and biases for each previous layer, to create a fully
+    connected MLP. It creates two seperate data flows, one for training data,
+    and another for test data to evaluate the test set. It creates summarys for
+    all node weights and biases.
+
+    Arguments:
+        x_train: This is a handle for a batch of training data.
+        x_test: This is a handle for a batch of test data.
+        n_features: This is an integer. It is the number of features in each
+            record.
+        window_length: This is the number of records in a sequence.
+        n_outputs: This is an integer. It is the number of outputs of the MLP.
+        hidden_layers: This is a list of integers. It is the number of nodes
+            in each hidden layer of the MLP.
+        activation_function: This is 'relu' by default but 'sigmoid' is also
+            supported. This is to choose the activation function between layers.
+
+    Returns:
+        out_layer_train: This is a handle for the output of the MLP from inputs
+            into the x_train input.
+        out_layer_test: This is a handle for the output of the MLP from inputs
+            into the
+    """
+
+    # Store layers weight & biases in dictionaries
+    weights = {}
+    biases = {}
+    sig = lambda x: tf.sigmoid(x)
+    relu = lambda x: tf.nn.relu(x)
+
+    # Select the appropriate activation function
+    if activation_function == 'relu':
+        op = relu
+    elif activation_function == 'sigmoid':
+        op = sig
+    else:
+        op = relu
+
+    # Add the first layer to the dictionary
+    cur_layer_num = 1
+    with tf.variable_scope("Layer1"):
+        weights['w' + str(cur_layer_num)] = tf.Variable(tf.random_normal([n_features * window_length,
+                hidden_layers[0]]), name=("Layer_" + str(cur_layer_num) + "_Weights"))
+        biases['b' + str(cur_layer_num)] = tf.Variable(tf.random_normal(
+                [hidden_layers[0]]), name=("Layer_" + str(cur_layer_num) + "_Biases"))
+
+    # Add all but the last layers to the dictionary
+    cur_layer_num = 2
+    for layer in hidden_layers[1:]:
+        with tf.variable_scope("Layer" + str(cur_layer_num)):
+            weights['w' + str(cur_layer_num)] = tf.Variable(tf.random_normal(
+                    [hidden_layers[cur_layer_num - 2], layer]), name=("Layer_" +
+                    str(cur_layer_num) + "_Weights"))
+            biases['b' + str(cur_layer_num)] = tf.Variable(tf.random_normal([layer]),
+                    name=("Layer_" + str(cur_layer_num) + "_Biases"))
+            cur_layer_num += 1
+
+    # Add the last layer to the dictionary
+    with tf.variable_scope("OutputLayer"):
+        weights['out'] = tf.Variable(tf.random_normal([hidden_layers[-1],
+                n_outputs]), name="Output_Weights")
+        biases['out'] = tf.Variable(tf.random_normal([n_outputs]),
+                name="Output_Biases")
+
+    # Set up the connections for the first layer
+    cur_layer_num = 1
+    cur_layer_train = tf.add(tf.matmul(tf.reshape(x_train, [batch_size - window_length + 1, n_features * window_length]), weights['w1']), biases['b1'])
+    cur_layer_train = op(cur_layer_train)
+    cur_layer_test = tf.add(tf.matmul(tf.reshape(x_test, [batch_size - window_length + 1, n_features * window_length]), weights['w1']), biases['b1'])
+    cur_layer_test = op(cur_layer_test)
+    with tf.variable_scope("Layer_1_Summarys"):
+        tf.summary.image("Weights", tf.reshape(weights['w1'], [1, n_features * window_length, hidden_layers[0], 1]))
+        tf.summary.image("Biases", tf.reshape(biases['b1'], [1, 1, hidden_layers[0], 1]))
+        tf.summary.histogram("Weights", weights['w1'])
+        tf.summary.histogram("Biases", biases['b1'])
+
+    # Set up the connections for the middle layers
+    cur_layer_num = 2
+    for layer in hidden_layers[1:]:
+        cur_layer_train = tf.add(tf.matmul(cur_layer_train, weights['w' +
+                str(cur_layer_num)]), biases['b' + str(cur_layer_num)])
+        cur_layer_train = op(cur_layer_train)
+        cur_layer_test = tf.add(tf.matmul(cur_layer_test, weights['w' +
+                str(cur_layer_num)]), biases['b' + str(cur_layer_num)])
+        cur_layer_test = op(cur_layer_test)
+        with tf.variable_scope("Layer_" + str(cur_layer_num) + "_Summarys"):
+            tf.summary.image("Weights", tf.reshape(weights['w' +
+                    str(cur_layer_num)], [1, hidden_layers[cur_layer_num - 2],
+                    layer, 1]))
+            tf.summary.image("Biases", tf.reshape(biases['b' +
+                    str(cur_layer_num)], [1, 1, layer, 1]))
+            tf.summary.histogram("Weights", weights['w' + str(cur_layer_num)])
+            tf.summary.histogram("Biases", biases['b' + str(cur_layer_num)])
+        cur_layer_num += 1
+
+    # Set up the connections for the last layer
+    if output_layer_biases == True:
+        cur_layer_train = tf.add(tf.matmul(cur_layer_train, weights['out']), biases['out'])
+        cur_layer_test = tf.add(tf.matmul(cur_layer_test, weights['out']), biases['out'])
+    else:
+        cur_layer_train = tf.matmul(cur_layer_train, weights['out'])
+        cur_layer_test = tf.matmul(cur_layer_test, weights['out'])
+
+    with tf.variable_scope("Output_Summarys"):
+        tf.summary.image("Weights", tf.reshape(weights['out'], [1, hidden_layers[-1], n_outputs, 1]))
+        tf.summary.histogram("Weights", weights['out'])
+        if output_layer_biases == True:
+            tf.summary.image("Biases", tf.reshape(biases['out'], [1, 1, n_outputs, 1]))
+            tf.summary.histogram("Biases", biases['out'])
+
+    return cur_layer_train, cur_layer_test
+
+################################################################################
+# Metrics
+################################################################################
 
 def accuracy_and_confusion_calculation(prediction, label):
     """ Adds calculation of accuracy and confusion to the tensorflow graph.
@@ -539,6 +677,10 @@ def streaming_accuracy_and_confusion_calculation(label, prediction,
     reset_op = tf.group(reset_acc_op, reset_conf_op)
 
     return test_op, reset_op, accuracy, confusion
+
+################################################################################
+# Misc
+################################################################################
 
 def load_data_into_ram():
     """ A function that loads all data into numpy arrays in RAM.
@@ -760,6 +902,10 @@ def print_system_params(argv):
 
 def numpy_long_output():
     np.set_printoptions(threshold=np.nan)
+
+################################################################################
+# Classes
+################################################################################
 
 class Metrics(object):
     """ An object containing metrics through a number of epochs.
