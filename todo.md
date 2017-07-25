@@ -85,3 +85,4 @@ Attempt to make a rnn in another file
 Add equal error rate, and other metrics to the metrics class?
 Try normalizing each layer of the mlp
 Try shuffling, and see if it helps.
+Fix bug in line 317 of helpers.py
