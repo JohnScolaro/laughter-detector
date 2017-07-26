@@ -15,18 +15,18 @@ if len(sys.argv) < 2:
 
     # Hyper Parameters
     learning_rate = 0.0001 #0.001
-    beta1 = 0.5 #0.9
-    beta2 = 0.9 #0.999
-    epsilon = 1e-08 #1e-08
+    beta1 = 0.9 #0.9
+    beta2 = 0.999 #0.999
+    epsilon = 1e-01 #1e-08
 
     # Network Params
-    training_epochs = 2
+    training_epochs = 1
     display_step = 50
     batch_size = 5000
     train_test_ratio = 0.85
     activation_function = 'relu'
-    layers = [200]
-    output_layer_biases = False
+    layers = [400]
+    output_layer_biases = True
     n_input = 60 # Data input features
     n_classes = 2 # Output types. Either laughter or not laughter.
     window_length = 20
@@ -189,7 +189,7 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
                     writer.add_run_metadata(run_metadata, 'batch' + str(tot_batch))
                     writer.add_summary(s, tot_batch)
 
-            except tf.errors.OutOfRangeError:
+            except (tf.errors.OutOfRangeError, tf.errors.InvalidArgumentError):
                 print("Finished Epoch {:d}.".format(cur_epoch_num))
                 break
 
@@ -200,7 +200,7 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
         while 1:
             try:
                 sess.run(test_op)
-            except tf.errors.OutOfRangeError:
+            except (tf.errors.OutOfRangeError, tf.errors.InvalidArgumentError):
                 acc, conf = sess.run([accuracy, confusion])
                 print("Accuracy: {:.5f}".format(acc))
                 print("Confusion Matrix:")

@@ -263,7 +263,8 @@ def _parse_function(proto):
 
     return data, clip, labels
 
-def input_pipeline_data_sequence_creator(data, label, batch_size, window_length, num_features, num_classes):
+def input_pipeline_data_sequence_creator(data, label, batch_size, window_length,
+        num_features, num_classes):
     """ Takes a batch of data and labels, and creates a batch of sequences.
 
     This function takes a batch (should be consecutive or the sequences won't
@@ -312,9 +313,11 @@ def input_pipeline_data_sequence_creator(data, label, batch_size, window_length,
 
     list_of_windows_of_data = []
     for x in range(batch_size - window_length + 1):
-        list_of_windows_of_data.append(tf.slice(data, [x, 0], [window_length, num_features]))
+        list_of_windows_of_data.append(tf.slice(data, [x, 0], [window_length,
+                num_features]))
     windowed_data = tf.squeeze(tf.stack(list_of_windows_of_data, axis=0))
-    windowed_labels = tf.slice(label, [window_length // 2, 0], [tf.shape(label)[0] - window_length + 1, num_classes])
+    windowed_labels = tf.slice(label, [window_length // 2, 0],
+            [batch_size - window_length + 1, num_classes])
 
     return windowed_data, windowed_labels
 
