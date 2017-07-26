@@ -363,6 +363,12 @@ def multilayer_perceptron(x_train, x_test, n_inputs, n_outputs, hidden_layers,
 
     """
 
+    # Variable initialization values
+    w_mean = 0.0
+    w_std = 1.0
+    b_mean = 0.0
+    b_std = 1.0
+
     # Store layers weight & biases in dictionaries
     weights = {}
     biases = {}
@@ -380,28 +386,32 @@ def multilayer_perceptron(x_train, x_test, n_inputs, n_outputs, hidden_layers,
     # Add the first layer to the dictionary
     cur_layer_num = 1
     with tf.variable_scope("Layer1"):
-        weights['w' + str(cur_layer_num)] = tf.Variable(tf.random_normal([n_inputs,
-                hidden_layers[0]]), name=("Layer_" + str(cur_layer_num) + "_Weights"))
+        weights['w' + str(cur_layer_num)] = tf.Variable(tf.random_normal(
+                [n_inputs, hidden_layers[0]], mean=w_mean, stddev=w_std),
+                name=("Layer_" + str(cur_layer_num) + "_Weights"))
         biases['b' + str(cur_layer_num)] = tf.Variable(tf.random_normal(
-                [hidden_layers[0]]), name=("Layer_" + str(cur_layer_num) + "_Biases"))
+                [hidden_layers[0]], mean=b_mean, stddev=b_std), name=("Layer_" +
+                str(cur_layer_num) + "_Biases"))
 
     # Add all but the last layers to the dictionary
     cur_layer_num = 2
     for layer in hidden_layers[1:]:
         with tf.variable_scope("Layer" + str(cur_layer_num)):
             weights['w' + str(cur_layer_num)] = tf.Variable(tf.random_normal(
-                    [hidden_layers[cur_layer_num - 2], layer]), name=("Layer_" +
-                    str(cur_layer_num) + "_Weights"))
-            biases['b' + str(cur_layer_num)] = tf.Variable(tf.random_normal([layer]),
-                    name=("Layer_" + str(cur_layer_num) + "_Biases"))
+                    [hidden_layers[cur_layer_num - 2], layer], mean=w_mean,
+                    stddev=w_std), name=("Layer_" + str(cur_layer_num) +
+                    "_Weights"))
+            biases['b' + str(cur_layer_num)] = tf.Variable(tf.random_normal(
+                    [layer], mean=b_mean, stddev=b_std), name=("Layer_" +
+                    str(cur_layer_num) + "_Biases"))
             cur_layer_num += 1
 
     # Add the last layer to the dictionary
     with tf.variable_scope("OutputLayer"):
         weights['out'] = tf.Variable(tf.random_normal([hidden_layers[-1],
-                n_outputs]), name="Output_Weights")
-        biases['out'] = tf.Variable(tf.random_normal([n_outputs]),
-                name="Output_Biases")
+                n_outputs], mean=w_mean, stddev=w_std), name="Output_Weights")
+        biases['out'] = tf.Variable(tf.random_normal([n_outputs], mean=b_mean,
+                stddev=b_std), name="Output_Biases")
 
     # Set up the connections for the first layer
     cur_layer_num = 1
@@ -486,6 +496,12 @@ def sequence_mlp(x_train, x_test, n_features, window_length, n_outputs,
             into the
     """
 
+    #
+    w_mean = 0.0
+    w_std = 0.001
+    b_mean = 0.001
+    b_std = 0.001
+
     # Store layers weight & biases in dictionaries
     weights = {}
     biases = {}
@@ -504,27 +520,31 @@ def sequence_mlp(x_train, x_test, n_features, window_length, n_outputs,
     cur_layer_num = 1
     with tf.variable_scope("Layer1"):
         weights['w' + str(cur_layer_num)] = tf.Variable(tf.random_normal([n_features * window_length,
-                hidden_layers[0]]), name=("Layer_" + str(cur_layer_num) + "_Weights"))
+                hidden_layers[0]], mean=w_mean, stddev=w_std), name=("Layer_" +
+                str(cur_layer_num) + "_Weights"))
         biases['b' + str(cur_layer_num)] = tf.Variable(tf.random_normal(
-                [hidden_layers[0]]), name=("Layer_" + str(cur_layer_num) + "_Biases"))
+                [hidden_layers[0]], mean=b_mean, stddev=b_std), name=("Layer_" +
+                str(cur_layer_num) + "_Biases"))
 
     # Add all but the last layers to the dictionary
     cur_layer_num = 2
     for layer in hidden_layers[1:]:
         with tf.variable_scope("Layer" + str(cur_layer_num)):
             weights['w' + str(cur_layer_num)] = tf.Variable(tf.random_normal(
-                    [hidden_layers[cur_layer_num - 2], layer]), name=("Layer_" +
-                    str(cur_layer_num) + "_Weights"))
-            biases['b' + str(cur_layer_num)] = tf.Variable(tf.random_normal([layer]),
-                    name=("Layer_" + str(cur_layer_num) + "_Biases"))
+                    [hidden_layers[cur_layer_num - 2], layer], mean=w_mean,
+                    stddev=w_std), name=("Layer_" + str(cur_layer_num) +
+                    "_Weights"))
+            biases['b' + str(cur_layer_num)] = tf.Variable(tf.random_normal(
+                    [layer], mean=b_mean, stddev=b_std), name=("Layer_" +
+                    str(cur_layer_num) + "_Biases"))
             cur_layer_num += 1
 
     # Add the last layer to the dictionary
     with tf.variable_scope("OutputLayer"):
         weights['out'] = tf.Variable(tf.random_normal([hidden_layers[-1],
-                n_outputs]), name="Output_Weights")
-        biases['out'] = tf.Variable(tf.random_normal([n_outputs]),
-                name="Output_Biases")
+                n_outputs], mean=w_mean, stddev=w_std), name="Output_Weights")
+        biases['out'] = tf.Variable(tf.random_normal([n_outputs], mean=b_mean,
+                stddev=b_std), name="Output_Biases")
 
     # Set up the connections for the first layer
     cur_layer_num = 1
