@@ -186,7 +186,7 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
                     writer.add_run_metadata(run_metadata, 'batch' + str(tot_batch))
                     writer.add_summary(s, tot_batch)
 
-            except (tf.errors.OutOfRangeError, tf.errors.InvalidArgumentError):
+            except tf.errors.OutOfRangeError:
                 print("Finished Epoch {:d}.".format(cur_epoch_num))
                 break
 
@@ -197,7 +197,7 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
         while 1:
             try:
                 sess.run(test_op)
-            except (tf.errors.OutOfRangeError, tf.errors.InvalidArgumentError):
+            except tf.errors.OutOfRangeError:
                 acc, conf = sess.run([accuracy, confusion])
                 print("Accuracy: {:.5f}".format(acc))
                 print("Confusion Matrix:")

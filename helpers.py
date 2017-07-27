@@ -227,10 +227,12 @@ def input_pipeline2(filename_list, batch_size, train_test_split_method='file',
     train_dataset = tf.contrib.data.TFRecordDataset(train_filename_list)
     train_dataset = train_dataset.batch(batch_size)
     train_dataset = train_dataset.map(_parse_function)
+    train_dataset = train_dataset.filter(lambda a, b, c: tf.equal(tf.shape(a)[0], batch_size))
 
     test_dataset = tf.contrib.data.TFRecordDataset(test_filename_list)
     test_dataset = test_dataset.batch(batch_size)
     test_dataset = test_dataset.map(_parse_function)
+    test_dataset = test_dataset.filter(lambda a, b, c: tf.equal(tf.shape(a)[0], batch_size))
 
     # Optionally shuffle
     if shuffle == True:
@@ -264,7 +266,7 @@ def _parse_function(proto):
     return data, clip, labels
 
 def input_pipeline_data_sequence_creator(data, label, batch_size, window_length,
-        num_features, num_classes):
+        num_features, num_classes, run_length='short'):
     """ Takes a batch of data and labels, and creates a batch of sequences.
 
     This function takes a batch (should be consecutive or the sequences won't
@@ -309,15 +311,26 @@ def input_pipeline_data_sequence_creator(data, label, batch_size, window_length,
     chop off (window_length // 2) elements from the start and end of the vector
     to ensure the label length is:
     [origional batch_size - window_length + 1, num_classes].
+
+    Also note, this function takes the variable 'run_length'. This chooses
+    between two implimentations of the same process. One takes TensorFlow a
+    minute to set up, but halves the time to do this maths. The other is neater
+    and runs instantly, however the overhead for dynamically reshaping the
+    arrays slows down the code. This is better for short test runs where we want
+    to avoid the minute long setup overhead.
     """
 
-    list_of_windows_of_data = []
-    for x in range(batch_size - window_length + 1):
-        list_of_windows_of_data.append(tf.slice(data, [x, 0], [window_length,
-                num_features]))
-    windowed_data = tf.squeeze(tf.stack(list_of_windows_of_data, axis=0))
-    windowed_labels = tf.slice(label, [window_length // 2, 0],
-            [batch_size - window_length + 1, num_classes])
+    if run_length == 'long':
+        list_of_windows_of_data = []
+        for x in range(batch_size - window_length + 1):
+            list_of_windows_of_data.append(tf.slice(data, [x, 0], [window_length,
+                    num_features]))
+        windowed_data = tf.squeeze(tf.stack(list_of_windows_of_data, axis=0))
+    else:
+        windowed_labels = tf.slice(label, [window_length // 2, 0],
+                [batch_size - window_length + 1, num_classes])
+        windowed_data = tf.map_fn(lambda i: data[i:i + window_length],
+                tf.range(batch_size - window_length + 1), dtype=tf.float32)
 
     return windowed_data, windowed_labels
 
@@ -608,9 +621,9 @@ def ltsm_model(data_input, num_features, num_classes, n_hidden=128):
 
     # Initialisation Parameters
     w_mean = 0.0
-    w_std = 1.0
-    b_mean = 0.1
-    b_std = 0.0
+    w_std = 2.0
+    b_mean = 0.0
+    b_std = 0.5
 
     # Variables
     weights = {

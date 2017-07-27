@@ -187,7 +187,7 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
                     writer.add_run_metadata(run_metadata, 'batch' + str(tot_batch))
                     writer.add_summary(s, tot_batch)
 
-            except (tf.errors.OutOfRangeError, tf.errors.InvalidArgumentError):
+            except tf.errors.OutOfRangeError:
                 print("Finished Epoch {:d}.".format(cur_epoch_num))
                 break
 
@@ -200,7 +200,7 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
                 d, l = sess.run([test_data, test_label])
                 sess.run(test_op, feed_dict={input_data_placeholder: d, input_label_placeholder: l})
 
-            except (tf.errors.OutOfRangeError, tf.errors.InvalidArgumentError):
+            except tf.errors.OutOfRangeError:
                 acc, conf = sess.run([accuracy, confusion])
                 print("Accuracy: {:.5f}".format(acc))
                 print("Confusion Matrix:")
@@ -226,7 +226,7 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
                 lab, pred = sess.run([test_label, soft_mlp_test], feed_dict={input_data_placeholder: d, input_label_placeholder: l})
                 plotters.laughter_plotter(pred, lab, pics_save_path, x, 0.02,
                         batch_size)
-        except (tf.errors.OutOfRangeError, tf.errors.InvalidArgumentError):
+        except tf.errors.OutOfRangeError:
             pass
 
     # Now do all the end of training testing specific operations.
