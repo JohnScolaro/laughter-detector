@@ -76,13 +76,19 @@ Add dataset creation scripts to this repo										DONE
 Make a "print_hyper_params" function.											TEST TO SEE IF DONE
 Reroute stderr as well as stdout												DONE
 Make sensitivity and specificity a class, so you can get max at end of run		DONE
-Move confusion matrix maker to the plotters file
-Attempt to make a rnn in another file
-	Learn how rnns's work in tensorflow
-		Funky input data requirements.
-	Check out LTSM's while you're at it.
-	Also add a MLP with multiple frames at once.
-Add equal error rate, and other metrics to the metrics class?
-Try normalizing each layer of the mlp
-Try shuffling, and see if it helps.
-Fix bug in line 317 of helpers.py
+Move confusion matrix maker to the plotters file								DONE - JUST TEST IT BEFORE CHECKING IT OFF
+Attempt to make a rnn in another file											
+	Learn how rnns's work in tensorflow											
+		Funky input data requirements.											
+	Check out LTSM's while you're at it.										
+	Also add a MLP with multiple frames at once.								DONE
+Add equal error rate, and other metrics to the metrics class?					
+Try normalizing each layer of the mlp											
+Try shuffling, and see if it helps.												
+Fix bug in line 317 of helpers.py												DONE
+Fiddle further with the initialization params
+Double check the cost function actually works like you think it does.			
+Get smoother output probabilities.												
+Investigate adding a ROC curve when you get better looking outputs.				
+Make sequence creation more efficient. (From stack overflow)
+Change label handle creation in sequence creator to get the last element, not the middle.

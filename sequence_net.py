@@ -89,9 +89,16 @@ train_iter, test_iter = helpers.input_pipeline2(dataset_file_list, batch_size)
 data, clip, label = train_iter.get_next()
 test_data, test_clip, test_label = test_iter.get_next()
 
+# Add to pipeline in order to batch sequences
+data, label = helpers.input_pipeline_data_sequence_creator(data, label,
+        batch_size, window_length, n_input, n_classes)
+test_data, test_label = helpers.input_pipeline_data_sequence_creator(test_data,
+        test_label, batch_size, window_length, n_input, n_classes)
+
 # Construct model
-mlp_train, mlp_test = helpers.multilayer_perceptron(data, test_data, n_input,
-        n_classes, layers, activation_function=activation_function,
+mlp_train, mlp_test = helpers.sequence_mlp(data, test_data, n_input,
+        window_length, n_classes, batch_size, layers,
+        activation_function=activation_function,
         output_layer_biases=output_layer_biases)
 
 # Define cost and optimizer

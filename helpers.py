@@ -16,7 +16,7 @@ import random
 # TensorBoard
 ################################################################################
 
-def openTensorBoard(path, port = 6006):
+def openTensorBoard(path, port=6006):
     """ Opens TensorBoard
 
     This function kills any processes currently running on the specified port
@@ -498,9 +498,9 @@ def sequence_mlp(x_train, x_test, n_features, window_length, n_outputs,
 
     #
     w_mean = 0.0
-    w_std = 0.001
-    b_mean = 0.001
-    b_std = 0.001
+    w_std = 0.5
+    b_mean = 1.0
+    b_std = 0.1
 
     # Store layers weight & biases in dictionaries
     weights = {}
@@ -548,9 +548,13 @@ def sequence_mlp(x_train, x_test, n_features, window_length, n_outputs,
 
     # Set up the connections for the first layer
     cur_layer_num = 1
-    cur_layer_train = tf.add(tf.matmul(tf.reshape(x_train, [batch_size - window_length + 1, n_features * window_length]), weights['w1']), biases['b1'])
+    cur_layer_train = tf.add(tf.matmul(tf.reshape(x_train, [batch_size -
+            window_length + 1, n_features * window_length]), weights['w1']),
+            biases['b1'])
     cur_layer_train = op(cur_layer_train)
-    cur_layer_test = tf.add(tf.matmul(tf.reshape(x_test, [batch_size - window_length + 1, n_features * window_length]), weights['w1']), biases['b1'])
+    cur_layer_test = tf.add(tf.matmul(tf.reshape(x_test, [batch_size -
+            window_length + 1, n_features * window_length]), weights['w1']),
+            biases['b1'])
     cur_layer_test = op(cur_layer_test)
     with tf.variable_scope("Layer_1_Summarys"):
         tf.summary.image("Weights", tf.reshape(weights['w1'], [1, n_features * window_length, hidden_layers[0], 1]))
@@ -593,6 +597,40 @@ def sequence_mlp(x_train, x_test, n_features, window_length, n_outputs,
             tf.summary.histogram("Biases", biases['out'])
 
     return cur_layer_train, cur_layer_test
+
+def ltsm_model(data_input, num_features, num_classes, n_hidden=128):
+    """ Creates an LTSM model to classify a sequence of audio data.
+
+    Inputs:
+        data_input: The input data handle. The format for this is shown below.
+        n_hidden: THe number of hidden units in the LTSM state.
+    """
+
+    # Initialisation Parameters
+    w_mean = 0.0
+    w_std = 1.0
+    b_mean = 0.1
+    b_std = 0.0
+
+    # Variables
+    weights = {
+        'out': tf.Variable(tf.random_normal([n_hidden, num_classes], mean=w_mean, stddev=w_std))
+    }
+    biases = {
+        'out': tf.Variable(tf.random_normal([num_classes], mean=b_mean, stddev=b_std))
+    }
+
+    # RNN
+    cell = tf.nn.rnn_cell.LSTMCell(n_hidden, state_is_tuple=True)
+    val, state = tf.nn.dynamic_rnn(cell, data_input, dtype=tf.float32)
+
+    # Getting only the last output
+    val = tf.transpose(val, [1, 0, 2])
+    last = tf.gather(val, int(val.get_shape()[0]) - 1)
+
+    data_prediction = tf.matmul(last, weights['out']) + biases['out']
+
+    return data_prediction
 
 ################################################################################
 # Metrics
@@ -854,53 +892,6 @@ def add_2d_tensor_list(tensor_list):
 
     return result
 
-def save_confusion_matrix(cm, path, classes, normalize=False,
-            title='Confusion Matrix', cmap=plt.cm.Blues, name=None):
-
-    """ This function prints and plots the confusion matrix.
-    Normalization can be applied by setting `normalize=True`.
-    """
-
-    fig = plt.figure(figsize=(6, 5))
-    plt.imshow(cm, interpolation='nearest', cmap=cmap)
-    plt.title(title)
-    plt.colorbar()
-    tick_marks = np.arange(len(classes))
-    plt.xticks(tick_marks, classes, rotation=45)
-    plt.yticks(tick_marks, classes)
-
-    if normalize:
-        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-
-    thresh = (cm.max() + cm.min()) / 2.
-    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-        plt.text(j, i, cm[i, j],
-                 horizontalalignment="center",
-                 color="white" if cm[i, j] > thresh else "black")
-
-    plt.tight_layout()
-    plt.ylabel('True label')
-    plt.xlabel('Predicted label')
-
-    # Make the containing folder if not already made
-    if not os.path.isdir(path):
-        os.makedirs(path)
-
-    # Make the conf container folder.
-    path = os.path.join(path, 'conf')
-    if not os.path.isdir(path):
-        os.makedirs(path)
-
-    # Save the file
-    if name == None:
-        plt.savefig(os.path.join(path, 'confusion_matrix.png'))
-    else:
-        plt.savefig(os.path.join(path, name))
-
-    # Remove the plot from memory so it doesn't effect later plotting functions.
-    plt.clf()
-    plt.close(fig)
-
 def print_system_params(argv):
 
     param_dict_keylist = [
@@ -966,6 +957,12 @@ class Metrics(object):
         return sens, spec
 
     def get_max_sensitivity_and_specificity(self):
+        """ Returns the maximum sensitivity and specificity for a whole run.
+
+        Returns the maximum sum of the sensitivity and specificity for a whole
+        training run.
+        """
+
         maximum = (0.0, 0.0, 0)
         epoch = 0
         for sens, spec in self.sensitivity_and_specificity_list:
