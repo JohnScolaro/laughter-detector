@@ -77,10 +77,10 @@ Make a "print_hyper_params" function.											TEST TO SEE IF DONE
 Reroute stderr as well as stdout												DONE
 Make sensitivity and specificity a class, so you can get max at end of run		DONE
 Move confusion matrix maker to the plotters file								DONE - JUST TEST IT BEFORE CHECKING IT OFF
-Attempt to make a rnn in another file											
-	Learn how rnns's work in tensorflow											
-		Funky input data requirements.											
-	Check out LTSM's while you're at it.										
+Attempt to make a rnn in another file											DONE
+	Learn how rnns's work in tensorflow											DONE
+		Funky input data requirements.											DONE
+	Check out LTSM's while you're at it.										DONE
 	Also add a MLP with multiple frames at once.								DONE
 Add equal error rate, and other metrics to the metrics class?					
 Try normalizing each layer of the mlp											
@@ -92,3 +92,6 @@ Get smoother output probabilities.
 Investigate adding a ROC curve when you get better looking outputs.				
 Make sequence creation more efficient. (From stack overflow)
 Change label handle creation in sequence creator to get the last element, not the middle.
+Remember to add windows_length to net_runner if you want it to work.
+Change input pipeline to use filters, and remove exception. (See github)
+File by file mfcc normalization on the input.
