@@ -23,10 +23,17 @@ for number = 1:files
     [cepstra,aspectrum,pspectrum] = melfcc(y, Fs, 'maxfreq', 8000, 'numcep', 20, 'nbands', 22, 'wintime', 0.02, 'hoptime', 0.02);
     data_length = [data_length, length(cepstra)];
     
+    % For the cepstra matrix, take each row and subtract the mean, and
+    % divide by the standard deviation to normalize it.
+    for i = 1:20
+        cepstra(1,:) = (cepstra(1,:) - mean(cepstra(1,:))) / std(cepstra(1,:));
+    end
+    
     % Calculate deltas
-    del = deltas(cepstra)/60;
+    % del = deltas(cepstra)/60;
     % Double deltas are deltas applied twice with a shorter window
-    ddel = deltas(deltas(cepstra,5)/10,5)/10;
+    % ddel = deltas(deltas(cepstra,5)/10,5)/10;
+    
 
     % Test to see if melfcc has returned NaN. If so, add to bad_files list and skip.
     [testx, testy] = find(isnan(cepstra));
@@ -37,11 +44,12 @@ for number = 1:files
     end
     
     % Join features together
-    cept_d_dd = [cepstra;del;ddel];
+    % cept_d_dd = [cepstra;del;ddel];
+    cept_d_dd = cepstra;
     
     disp('Creating Clip Label File');
 
-    recording_labels = ones(1,data_length(number)) * number;
+    recording_labels = ones(1, data_length(number)) * number;
 
     disp('Creating Label File for Neural Networks');
 
