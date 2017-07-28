@@ -20,14 +20,14 @@ if len(sys.argv) < 2:
     epsilon = 1e-08 #1e-08
 
     # Network Params
-    training_epochs = 1
+    training_epochs = 15
     display_step = 50
     batch_size = 5000
     train_test_ratio = 0.85
     activation_function = 'relu'
-    layers = [400]
+    layers = [200]
     output_layer_biases = True
-    n_input = 60 # Data input features
+    n_input = 20 # Data input features
     n_classes = 2 # Output types. Either laughter or not laughter.
     window_length = 20
 

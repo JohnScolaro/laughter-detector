@@ -14,20 +14,20 @@ if len(sys.argv) < 2:
     name = "sequence_mlp_test"
 
     # Hyper Parameters
-    learning_rate = 0.001 #0.001
+    learning_rate = 0.0001 #0.001
     beta1 = 0.9 #0.9
     beta2 = 0.999 #0.999
     epsilon = 1e-08 #1e-08
 
     # Network Params
-    training_epochs = 1
+    training_epochs = 20
     display_step = 50
     batch_size = 5000
     train_test_ratio = 0.85
     activation_function = 'relu'
-    layers = [400]
+    layers = [100, 30]
     output_layer_biases = True
-    n_input = 60 # Data input features
+    n_input = 20 # Data input features
     n_classes = 2 # Output types. Either laughter or not laughter.
     window_length = 20
 
@@ -91,9 +91,9 @@ test_data, test_clip, test_label = test_iter.get_next()
 
 # Add to pipeline in order to batch sequences
 data, label = helpers.input_pipeline_data_sequence_creator(data, label,
-        batch_size, window_length, n_input, n_classes)
+        batch_size, window_length, n_input, n_classes, run_length='long')
 test_data, test_label = helpers.input_pipeline_data_sequence_creator(test_data,
-        test_label, batch_size, window_length, n_input, n_classes)
+        test_label, batch_size, window_length, n_input, n_classes, run_length='long')
 
 # Construct model
 mlp_train, mlp_test = helpers.sequence_mlp(data, test_data, n_input,

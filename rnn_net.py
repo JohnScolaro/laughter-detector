@@ -21,11 +21,11 @@ if len(sys.argv) < 2:
     epsilon = 1e-08 #1e-08
 
     # Network Params
-    training_epochs = 1
-    display_step = 50
+    training_epochs = 15
+    display_step = 30
     batch_size = 5000
     train_test_ratio = 0.85
-    n_input = 60 # Data input features
+    n_input = 20 # Data input features
     n_classes = 2 # Output types. Either laughter or not laughter.
     window_length = 20
     n_hidden = 128
@@ -90,9 +90,9 @@ test_data, test_clip, test_label = test_iter.get_next()
 
 # Add to pipeline in order to batch sequences
 data, label = helpers.input_pipeline_data_sequence_creator(data, label,
-        batch_size, window_length, n_input, n_classes)
+        batch_size, window_length, n_input, n_classes, run_length='long')
 test_data, test_label = helpers.input_pipeline_data_sequence_creator(test_data,
-        test_label, batch_size, window_length, n_input, n_classes)
+        test_label, batch_size, window_length, n_input, n_classes, run_length='long')
 
 # Construct model
 input_data_placeholder = tf.placeholder(tf.float32, [batch_size - window_length + 1, window_length, n_input])
@@ -100,7 +100,7 @@ input_label_placeholder = tf.placeholder(tf.int64, [batch_size - window_length +
 data_prediction = helpers.ltsm_model(input_data_placeholder, n_input, n_classes, n_hidden=n_hidden)
 
 # Define cost and optimizer
-weighted_labels = tf.multiply(input_label_placeholder, tf.constant([1, 25], dtype=tf.int64), name='add_weight_to_labels')
+weighted_labels = tf.multiply(input_label_placeholder, tf.constant([1, 30], dtype=tf.int64), name='add_weight_to_labels')
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=data_prediction,
         labels=weighted_labels, name="cost_op"))
 tf.summary.scalar('cost', cost)

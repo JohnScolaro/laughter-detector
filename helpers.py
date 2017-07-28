@@ -254,7 +254,7 @@ def _parse_function(proto):
     """
 
     test = tf.parse_example(proto, features={
-        'data': tf.FixedLenFeature([60], tf.float32),
+        'data': tf.FixedLenFeature([20], tf.float32),
         'class': tf.FixedLenFeature([1], tf.int64),
         'label': tf.FixedLenFeature([2], tf.int64)
     })
@@ -320,6 +320,9 @@ def input_pipeline_data_sequence_creator(data, label, batch_size, window_length,
     to avoid the minute long setup overhead.
     """
 
+    windowed_labels = tf.slice(label, [window_length // 2, 0],
+            [batch_size - window_length + 1, num_classes])
+
     if run_length == 'long':
         list_of_windows_of_data = []
         for x in range(batch_size - window_length + 1):
@@ -327,8 +330,6 @@ def input_pipeline_data_sequence_creator(data, label, batch_size, window_length,
                     num_features]))
         windowed_data = tf.squeeze(tf.stack(list_of_windows_of_data, axis=0))
     else:
-        windowed_labels = tf.slice(label, [window_length // 2, 0],
-                [batch_size - window_length + 1, num_classes])
         windowed_data = tf.map_fn(lambda i: data[i:i + window_length],
                 tf.range(batch_size - window_length + 1), dtype=tf.float32)
 
@@ -511,9 +512,9 @@ def sequence_mlp(x_train, x_test, n_features, window_length, n_outputs,
 
     #
     w_mean = 0.0
-    w_std = 0.5
-    b_mean = 1.0
-    b_std = 0.1
+    w_std = 0.1
+    b_mean = 0.0
+    b_std = 0.05
 
     # Store layers weight & biases in dictionaries
     weights = {}
