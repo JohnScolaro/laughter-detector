@@ -14,22 +14,22 @@ if len(sys.argv) < 2:
     name = "sequence_mlp_test"
 
     # Hyper Parameters
-    learning_rate = 0.0001 #0.001
+    learning_rate = 0.00003 #0.001 #0.00006
     beta1 = 0.9 #0.9
     beta2 = 0.999 #0.999
     epsilon = 1e-08 #1e-08
 
     # Network Params
-    training_epochs = 20
-    display_step = 50
+    training_epochs = 5
+    display_step = 20
     batch_size = 5000
     train_test_ratio = 0.85
     activation_function = 'relu'
-    layers = [100, 30]
+    layers = [400]
     output_layer_biases = True
     n_input = 20 # Data input features
     n_classes = 2 # Output types. Either laughter or not laughter.
-    window_length = 20
+    window_length = 50
 
 ################################################################################
 
@@ -51,6 +51,7 @@ else:
     output_layer_biases = "True"== sys.argv[12]
     n_input = int(sys.argv[13])
     n_classes = int(sys.argv[14])
+    window_length = int(sys.argv[15])
 
 start_time = time.time()
 directory = os.path.dirname(__file__)
@@ -102,7 +103,7 @@ mlp_train, mlp_test = helpers.sequence_mlp(data, test_data, n_input,
         output_layer_biases=output_layer_biases)
 
 # Define cost and optimizer
-weighted_labels = tf.multiply(label, tf.constant([1, 25], dtype=tf.int32), name='add_weight_to_labels')
+weighted_labels = tf.multiply(label, tf.constant([1, 29], dtype=tf.int32), name='add_weight_to_labels')
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=mlp_train,
         labels=weighted_labels, name="cost_op"))
 tf.summary.scalar('cost', cost)
@@ -180,7 +181,7 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
                     cur_time = time.time()
                     print("Batch number = {:d}. Epoch {:d}. Batch Cost: {:.3f}. {:.3f}s per batch. Total Time = {:.3f}s.".format(batch,
                             cur_epoch_num, c, (cur_time - last_time) /
-                            display_step, cur_time - start_time))
+                            display_step, cur_time - start_time), flush=True)
 
                     # Write data to summary's on each display batch
                     writer.add_run_metadata(run_metadata, 'batch' + str(tot_batch))

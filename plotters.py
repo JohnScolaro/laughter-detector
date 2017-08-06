@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import itertools
 import os
+from sklearn import metrics
 
 def laughter_plotter(prediction, label, path, number, time_step, batch_size):
     """ Plots predictions and labels visually.
@@ -96,3 +97,48 @@ def save_confusion_matrix(cm, path, classes, normalize=False,
     # Remove the plot from memory so it doesn't effect later plotting functions.
     plt.clf()
     plt.close(fig)
+
+def roc_curve_plotter(prediction, label, path=None):
+    """ Computes and plots the ROC curve for the test dataset.
+
+    """
+
+    fpr, tpr, thresholds = metrics.roc_curve(label, prediction, pos_label=1)
+    print(fpr)
+    print(tpr)
+    print(thresholds)
+
+    # Plot of a ROC curve for a specific class
+    plt.figure()
+    lw = 2
+    plt.plot(fpr, tpr, color='darkorange',
+             lw=lw, label='ROC curve')
+    plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('ROC Curve for Laughter')
+    plt.legend(loc="lower right")
+
+    if path == None:
+        plt.show()
+    else:
+        # Make the containing folder if not already made
+        if not os.path.isdir(path):
+            os.makedirs(path)
+
+        # Make the conf container folder.
+        path = os.path.join(path, 'conf')
+        if not os.path.isdir(path):
+            os.makedirs(path)
+
+        # Save the file
+        if name == None:
+            plt.savefig(os.path.join(path, 'confusion_matrix.png'))
+        else:
+            plt.savefig(os.path.join(path, name))
+
+        # Remove the plot from memory so it doesn't effect later plotting functions.
+        plt.clf()
+        plt.close(fig)
