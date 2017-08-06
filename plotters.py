@@ -98,24 +98,21 @@ def save_confusion_matrix(cm, path, classes, normalize=False,
     plt.clf()
     plt.close(fig)
 
-def roc_curve_plotter(prediction, label, path=None):
+def roc_curve_plotter(prediction, label, path=None, name=None):
     """ Computes and plots the ROC curve for the test dataset.
 
     """
 
     fpr, tpr, thresholds = metrics.roc_curve(label, prediction, pos_label=1)
-    print(fpr)
-    print(tpr)
-    print(thresholds)
 
     # Plot of a ROC curve for a specific class
-    plt.figure()
+    fig = plt.figure()
     lw = 2
     plt.plot(fpr, tpr, color='darkorange',
              lw=lw, label='ROC curve')
     plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
     plt.xlim([0.0, 1.0])
-    plt.ylim([0.0, 1.05])
+    plt.ylim([0.0, 1.01])
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
     plt.title('ROC Curve for Laughter')
@@ -129,15 +126,15 @@ def roc_curve_plotter(prediction, label, path=None):
             os.makedirs(path)
 
         # Make the conf container folder.
-        path = os.path.join(path, 'conf')
+        path = os.path.join(path, 'roc')
         if not os.path.isdir(path):
             os.makedirs(path)
 
         # Save the file
         if name == None:
-            plt.savefig(os.path.join(path, 'confusion_matrix.png'))
+            plt.savefig(os.path.join(path, 'roc', 'roc_curve.png'))
         else:
-            plt.savefig(os.path.join(path, name))
+            plt.savefig(os.path.join(path, 'roc', name))
 
         # Remove the plot from memory so it doesn't effect later plotting functions.
         plt.clf()

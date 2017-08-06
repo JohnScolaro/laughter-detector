@@ -20,7 +20,7 @@ if len(sys.argv) < 2:
     epsilon = 1e-08 #1e-08
 
     # Network Params
-    training_epochs = 5
+    training_epochs = 1
     display_step = 20
     batch_size = 5000
     train_test_ratio = 0.85
@@ -219,10 +219,29 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
         # Re-initialize the test data, so you can check again, to draw pics.
         sess.run(test_iter.initializer)
         for x in range(50):
-
             lab, pred = sess.run([test_label, soft_mlp_test])
             plotters.laughter_plotter(pred, lab, pics_save_path, x, 0.02,
                     batch_size)
+
+        # Re-initialize the test data, so you can sum all results together and
+        # plot the ROC curves.
+        sess.run(test_iter.initializer)
+        concat_lab = np.array([])
+        concat_pred = np.array([])
+        flag = False
+        for x in range(3): #while(1):
+            try:
+                lab, pred = sess.run([test_label, soft_mlp_test])
+                if flag == False:
+                    concat_lab = lab
+                    concat_pred = pred
+                    flag = True
+                concat_lab = np.concatenate((concat_lab, lab), axis=0)
+                concat_pred = np.concatenate((concat_pred, pred), axis=0)
+            except tf.errors.OutOfRangeError:
+                break
+        plotters.roc_curve_plotter(concat_pred[:,0], concat_lab[:,0], save_folder_name, name='1.png')
+        plotters.roc_curve_plotter(concat_pred[:,1], concat_lab[:,1], save_folder_name, name='2.png')
 
     # Now do all the end of training testing specific operations.
     print("Training Completed in {:.3f} seconds.".format(time.time() - start_time))
