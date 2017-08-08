@@ -108,7 +108,7 @@ def get_immediate_subdirectories(a_dir):
 
 # Create our list of files
 list_of_files = []
-for subdirectory in get_immediate_subdirectories(os.path.join(os.path.dirname(__file__), "../Modified Audio/")):
+for subdirectory in get_immediate_subdirectories(os.path.dirname(__file__)):
 	for file_number in range(100):
 		file_path = os.path.join(subdirectory, str(file_number + 1) + ".eaf")
 		if os.path.isfile(file_path):

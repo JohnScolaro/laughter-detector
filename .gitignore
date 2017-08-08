@@ -13,8 +13,8 @@ dataset/
 # Not the modified dataset or laughter classifications
 modified_audio/*wav
 modified_audio/*/
-# But do include the python xml parsing script
-!modified_audio/xml_parsing.py
+# But do include any python files
+!modified_audio/*.py
 
 # Not the whole unprocessed dataset
 origional_audio/
