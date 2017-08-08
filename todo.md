@@ -59,19 +59,18 @@
 	* increase the weight of the laughter currently in the set					**DONE**
 * Make logger and the other summary logger use the same writer.					**DONE**
 * Change prints to print + log													**DONE**
-* Develop some more features														
+* Develop some more features													
 * Dump audio																		
 	* Dump laughter classified training audio										
 	* Dump laughter classified test audio											
 * make a real vs predicted laughter values graph in pyplot						**DONE**
-* Maybe test adding some normalization per batch?									
 * Fix summary writing bug? Kill tensorboard when starting training to fix.		**MAYBE DONE?**
 * Take the other column in the sound plot generator. The labels are opposite.	**DONE**
 * Change the plot size back to the default for the confusion matrix generator.	**DONE**
 * Make another program which runs net.py multiple times with different param	**DONE**
 	* Make it work well and give it a few tests.								**DONE**
-	* Clean it all up. Make helper functions to reduce code.						
-	* Remove a few of the instances of code where you make folders if they dont exist.
+	* Clean it all up. Make helper functions to reduce code.					
+	* Remove a few of the instances of code where you make folders if they don't exist.
 * Add dataset creation scripts to this repo										**DONE**
 * Make a "print_hyper_params" function.											**DONE**
 * Reroute stderr as well as stdout												**DONE**
@@ -86,17 +85,27 @@
 * Try normalizing each layer of the mlp											
 * Try shuffling, and see if it helps.												
 * Fix bug in line 317 of helpers.py												**DONE**
-* Fiddle further with the initialization params									
+* Fiddle further with the initialization params									**DONE**
+	* Xavier initialization
 * Double check the cost function actually works like you think it does.			
 * Get smoother output probabilities.											**KINDA DONE**
-* Investigate adding a ROC curve when you get better looking outputs.				
+* Investigate adding a ROC curve when you get better looking outputs.			**DONE**
 * Make sequence creation more efficient. (From stack overflow)					**DONE**
 * Change label handle creation in sequence creator to get the last element, not the middle.
-* Remember to add windows_length to net_runner if you want it to work.
+* Remember to add windows_length to net_runner if you want it to work.			**DONE**
 * Change input pipeline to use filters, and remove exception. (See github)		**DONE**
 * File by file mfcc normalization on the input.									**DONE**
 	* Make some pretty histograms showing the average values to visualize it.	**DONE**
+	* How about batch normalization?
+	* How about only removing the mean, not changing the stddev?
 * Increased Window Sizes														**DONE**
-* Different Hyper Params
+* Different Hyper Params														**DONE**
 * Make google Listen to some of the laughter from my audio sample.
-* Get someone else to classify laughter in my dataset.							
+* Get someone else to classify laughter in my dataset.							**DONE**
+	* Analyse the difference.
+* Implement RELU clipping
+* Implement RELU dropout
+* Implement nested cross-validation
+* Investigate tf.app.flags as a potential hyperparam parsing technique.
+* Restructure folders to include more actual project things inside this repo.
+* Start writing report and maybe also include that in this repo.

@@ -1,3 +1,20 @@
+# Don't save any test runs
 tensorboard/
+
+# No Python binaries
 __pycache__/
+
+# No figures
 figs/
+
+# Not the whole processed dataset
+dataset/
+
+# Not the modified dataset or laughter classifications
+modified_audio/*wav
+modified_audio/*/
+# But do include the python xml parsing script
+!modified_audio/xml_parsing.py
+
+# Not the whole unprocessed dataset
+origional_audio/

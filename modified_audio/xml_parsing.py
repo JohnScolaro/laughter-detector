@@ -2,26 +2,9 @@ import xml.etree.ElementTree
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
+import os
 
-def histogram(data_list):
-	x = np.array(data_list)
-
-	fig = plt.figure()
-	ax = fig.add_subplot(1, 1, 1)
-	ax.set_axisbelow(True)
-
-	# the histogram of the data
-	n, bins, patches = plt.hist(x, 40, normed=1, facecolor='green', alpha=0.75, ec='black')
-
-	plt.xlabel('Time (ms)')
-	plt.ylabel('Frequency')
-	plt.title('Histogram of Laughter Lengths')
-	plt.grid(True, linestyle='--')
-	plt.rcParams['grid.linestyle'] = "--"
-
-	plt.show()
-
-def main():
+def main(list_of_files):
 	# A counter to find total laugh count
 	counter = 0
 	# A counter to find total laugh length
@@ -36,12 +19,17 @@ def main():
 	# An array of lengths of laughter for stats
 	laughter_list = []
 	# Min and max laughs per file
-	min_laughs_per_file = 9999999999 #Just some big number
+	min_laughs_per_file = 9999999999 # Just some big number
 	max_laughs_per_file = -1
 	laughs_per_file = 0
 
 	# For every file
 	for f in list_of_files:
+
+		# Check that f actually exists
+		if not os.path.isfile(f):
+			print(f + " isn't a file.")
+			continue
 
 		# Create a file to open and write laughter times to
 		new_file = open(f.rsplit('.', 1)[0] + ".ltimes", 'w');
@@ -92,10 +80,39 @@ def main():
 	print("The file with the most laughs has " + str(max_laughs_per_file) + " in it.")
 	histogram(laughter_list)
 
-# Create our list of files
-our_range = range(81)
-list_of_files = []
-for file_number in our_range:
-	list_of_files.append("../Modified Audio/" + str(file_number + 1) + ".eaf")
+################################################################################
+# Helper Functions
+def histogram(data_list):
+	x = np.array(data_list)
 
-main()
+	fig = plt.figure()
+	ax = fig.add_subplot(1, 1, 1)
+	ax.set_axisbelow(True)
+
+	# the histogram of the data
+	n, bins, patches = plt.hist(x, 40, normed=1, facecolor='green', alpha=0.75, ec='black')
+
+	plt.xlabel('Time (ms)')
+	plt.ylabel('Frequency')
+	plt.title('Histogram of Laughter Lengths')
+	plt.grid(True, linestyle='--')
+	plt.rcParams['grid.linestyle'] = "--"
+
+	plt.show()
+
+def get_immediate_subdirectories(a_dir):
+    return [os.path.join(a_dir, name) for name in os.listdir(a_dir)
+            if os.path.isdir(os.path.join(a_dir, name))]
+
+################################################################################
+
+# Create our list of files
+list_of_files = []
+for subdirectory in get_immediate_subdirectories(os.path.join(os.path.dirname(__file__), "../Modified Audio/")):
+	for file_number in range(100):
+		file_path = os.path.join(subdirectory, str(file_number + 1) + ".eaf")
+		if os.path.isfile(file_path):
+			list_of_files.append(file_path)
+
+# Run above program on all these files
+main(list_of_files)

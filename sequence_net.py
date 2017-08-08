@@ -103,7 +103,7 @@ mlp_train, mlp_test = helpers.sequence_mlp(data, test_data, n_input,
         output_layer_biases=output_layer_biases)
 
 # Define cost and optimizer
-weighted_labels = tf.multiply(label, tf.constant([1, 29], dtype=tf.int32), name='add_weight_to_labels')
+weighted_labels = tf.multiply(label, tf.constant([1, 32], dtype=tf.int32), name='add_weight_to_labels')
 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=mlp_train,
         labels=weighted_labels, name="cost_op"))
 tf.summary.scalar('cost', cost)
@@ -229,7 +229,7 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
         concat_lab = np.array([])
         concat_pred = np.array([])
         flag = False
-        for x in range(3): #while(1):
+        while(1):
             try:
                 lab, pred = sess.run([test_label, soft_mlp_test])
                 if flag == False:
@@ -240,8 +240,8 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
                 concat_pred = np.concatenate((concat_pred, pred), axis=0)
             except tf.errors.OutOfRangeError:
                 break
-        plotters.roc_curve_plotter(concat_pred[:,0], concat_lab[:,0], save_folder_name, name='1.png')
-        plotters.roc_curve_plotter(concat_pred[:,1], concat_lab[:,1], save_folder_name, name='2.png')
+        plotters.roc_curve_plotter(concat_pred[:,0], concat_lab[:,0], pics_save_path, name='laughter.png')
+        plotters.roc_curve_plotter(concat_pred[:,1], concat_lab[:,1], pics_save_path, name='non_laughter.png')
 
     # Now do all the end of training testing specific operations.
     print("Training Completed in {:.3f} seconds.".format(time.time() - start_time))

@@ -132,9 +132,9 @@ def roc_curve_plotter(prediction, label, path=None, name=None):
 
         # Save the file
         if name == None:
-            plt.savefig(os.path.join(path, 'roc', 'roc_curve.png'))
+            plt.savefig(os.path.join(path, 'roc_curve.png'))
         else:
-            plt.savefig(os.path.join(path, 'roc', name))
+            plt.savefig(os.path.join(path, name))
 
         # Remove the plot from memory so it doesn't effect later plotting functions.
         plt.clf()
