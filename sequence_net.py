@@ -14,15 +14,15 @@ if len(sys.argv) < 2:
     name = "sequence_mlp_test"
 
     # Hyper Parameters
-    learning_rate = 0.00003 #0.001 #0.00006
-    beta1 = 0.9 #0.9
-    beta2 = 0.999 #0.999
+    learning_rate = 0.00006 #0.001 #0.00006
+    beta1 = 0.7 #0.9
+    beta2 = 0.9 #0.999
     epsilon = 1e-08 #1e-08
 
     # Network Params
-    training_epochs = 1
+    training_epochs = 5
     display_step = 20
-    batch_size = 5000
+    batch_size = 5000 #5000
     train_test_ratio = 0.85
     activation_function = 'relu'
     layers = [400]
@@ -77,7 +77,7 @@ if len(sys.argv) > 1:
 # Make lists of valid dataset file names
 dataset_file_list = []
 for x in range(100):
-    name = os.path.join(directory, '../Dataset/') + str(x) + "_dataset.tfrecord"
+    name = os.path.join(directory, 'dataset', str(x) + "_dataset.tfrecord")
     if os.path.isfile(name):
         dataset_file_list.append(name)
 
@@ -100,7 +100,8 @@ test_data, test_label = helpers.input_pipeline_data_sequence_creator(test_data,
 mlp_train, mlp_test = helpers.sequence_mlp(data, test_data, n_input,
         window_length, n_classes, batch_size, layers,
         activation_function=activation_function,
-        output_layer_biases=output_layer_biases)
+        output_layer_biases=output_layer_biases,
+        initialization='Xavier', clipped=False, dropout=False)
 
 # Define cost and optimizer
 weighted_labels = tf.multiply(label, tf.constant([1, 32], dtype=tf.int32), name='add_weight_to_labels')
@@ -221,7 +222,7 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
         for x in range(50):
             lab, pred = sess.run([test_label, soft_mlp_test])
             plotters.laughter_plotter(pred, lab, pics_save_path, x, 0.02,
-                    batch_size)
+                    batch_size, window_length)
 
         # Re-initialize the test data, so you can sum all results together and
         # plot the ROC curves.

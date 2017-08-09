@@ -6,7 +6,8 @@ import itertools
 import os
 from sklearn import metrics
 
-def laughter_plotter(prediction, label, path, number, time_step, batch_size):
+def laughter_plotter(prediction, label, path, number, time_step, batch_size,
+        window_length):
     """ Plots predictions and labels visually.
 
     Inputs:
@@ -28,10 +29,14 @@ def laughter_plotter(prediction, label, path, number, time_step, batch_size):
     fig = plt.figure(figsize=(15, 5))
 
     # Plot the laughter predictions.
-    plt.plot(times[0:500], prediction[0:500], 'b', linewidth=1)
+    plot_length = 500
+    if batch_size < 600:
+        plot_length = batch_size - window_length - 1
+
+    plt.plot(times[0:plot_length], prediction[0:plot_length], 'b', linewidth=1)
 
     # Plot the labels.
-    plt.plot(times[0:500], label[0:500], 'k', linewidth=2)
+    plt.plot(times[0:plot_length], label[0:plot_length], 'k', linewidth=2)
 
     # Do custom pretty things like axis labels, legend, and colours.
     plt.xlabel('Time (s)')

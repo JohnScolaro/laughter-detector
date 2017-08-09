@@ -477,7 +477,8 @@ def multilayer_perceptron(x_train, x_test, n_inputs, n_outputs, hidden_layers,
 
 def sequence_mlp(x_train, x_test, n_features, window_length, n_outputs,
         batch_size, hidden_layers, activation_function='relu',
-        output_layer_biases=True):
+        output_layer_biases=True, initialization=None, clipped=False,
+        dropout=False):
     """ Creates an MLP for multiple data frames at once.
 
     The goal of this function is to mimic the multilayer_perceptron function in
@@ -510,29 +511,46 @@ def sequence_mlp(x_train, x_test, n_features, window_length, n_outputs,
             into the
     """
 
-    #
+    # The default initialization parameters for the layers
     w_mean = 0.0
     w_std = 0.1
     b_mean = 0.0
-    b_std = 0.05
+    b_std = 0.0
+
+    # Clipping max
+    lim = 10
+    keep_prob = 0.2
 
     # Store layers weight & biases in dictionaries
     weights = {}
     biases = {}
-    sig = lambda x: tf.sigmoid(x)
-    relu = lambda x: tf.nn.relu(x)
 
     # Select the appropriate activation function
-    if activation_function == 'relu':
-        op = relu
-    elif activation_function == 'sigmoid':
-        op = sig
+    if activation_function == 'sigmoid':
+        a = lambda x: tf.sigmoid(x)
     else:
-        op = relu
+        a = lambda x: tf.nn.relu(x)
+
+    if clipped == True:
+        b = lambda x: tf.minimum(a(x), lim)
+    else:
+        b = a
+
+    if dropout == True:
+        c = lambda x: tf.nn.dropout(b(x), keep_prob)
+    else:
+        c = b
+
+    op = c
 
     # Add the first layer to the dictionary
     cur_layer_num = 1
     with tf.variable_scope("Layer1"):
+        if initialization == 'Xavier':
+            w_std = tf.sqrt(3 / (n_features + hidden_layers[0]))
+            b_std = 0.0
+            w_mean = 0.0
+            b_mean = 0.0
         weights['w' + str(cur_layer_num)] = tf.Variable(tf.random_normal([n_features * window_length,
                 hidden_layers[0]], mean=w_mean, stddev=w_std), name=("Layer_" +
                 str(cur_layer_num) + "_Weights"))
@@ -544,6 +562,11 @@ def sequence_mlp(x_train, x_test, n_features, window_length, n_outputs,
     cur_layer_num = 2
     for layer in hidden_layers[1:]:
         with tf.variable_scope("Layer" + str(cur_layer_num)):
+            if initialization == 'Xavier':
+                w_std = tf.sqrt(3 / (layer + hidden_layers[cur_layer_num - 2]))
+                b_std = 0.0
+                w_mean = 0.0
+                b_mean = 0.0
             weights['w' + str(cur_layer_num)] = tf.Variable(tf.random_normal(
                     [hidden_layers[cur_layer_num - 2], layer], mean=w_mean,
                     stddev=w_std), name=("Layer_" + str(cur_layer_num) +
@@ -555,6 +578,11 @@ def sequence_mlp(x_train, x_test, n_features, window_length, n_outputs,
 
     # Add the last layer to the dictionary
     with tf.variable_scope("OutputLayer"):
+        if initialization == 'Xavier':
+            w_std = tf.sqrt(3 / (hidden_layers[-1] + n_outputs))
+            b_std = 0.0
+            w_mean = 0.0
+            b_mean = 0.0
         weights['out'] = tf.Variable(tf.random_normal([hidden_layers[-1],
                 n_outputs], mean=w_mean, stddev=w_std), name="Output_Weights")
         biases['out'] = tf.Variable(tf.random_normal([n_outputs], mean=b_mean,
