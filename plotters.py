@@ -21,7 +21,7 @@ def multiple_laughter_plotter(sess, test_label, test_clip, test_seq,
     sess.run(test_iter.initializer)
 
     # Create a bunch of plots.
-    for x in range(50):
+    for x in range(100):
         try:
             lab, pred, clip, seq = sess.run([test_label, soft_mlp_test,
                     test_clip, test_seq])
@@ -174,8 +174,10 @@ def multiple_roc_curve_plotter(sess, test_label, soft_mlp_test, test_iter,
                 concat_lab = lab
                 concat_pred = pred
                 flag = True
-            concat_lab = np.concatenate((concat_lab, lab), axis=0)
-            concat_pred = np.concatenate((concat_pred, pred), axis=0)
+            else:
+                concat_lab = np.concatenate((concat_lab, lab), axis=0)
+                concat_pred = np.concatenate((concat_pred, pred), axis=0)
+                
         except tf.errors.OutOfRangeError:
             break
 

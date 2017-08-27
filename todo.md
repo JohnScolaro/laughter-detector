@@ -100,7 +100,7 @@
 * Implement nested cross-validation
 * Investigate tf.app.flags as a potential hyperparam parsing technique.			**DONE** - It's actually not that good.
 * Restructure folders to include more actual project things inside this repo.
-* Start writing report and maybe also include that in this repo.
+* Start writing report and maybe also include that in this repo.				**DONE**
 * Make the laughter plotter function take batch_size into account.				**DONE**
 * Move the cost function to helpers to clean things up.							**DONE**
 	* When doing it, add the ability to easily change it.						**DONE**
@@ -115,3 +115,4 @@
 	* Dump laughter classified test audio										
 * Add weight decay to stop values from getting too large?
 * Update other files to be in line with sequence_net.py.
+* Change classification so a sequence is judged by the start, not the middle.
