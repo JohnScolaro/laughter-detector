@@ -1,3 +1,4 @@
+import tensorflow as tf
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -5,6 +6,31 @@ import matplotlib.patches as mpatches
 import itertools
 import os
 from sklearn import metrics
+
+def multiple_laughter_plotter(sess, test_label, soft_mlp_test, test_iter,
+        pics_save_path, batch_size, window_length):
+
+    """ A function which handles creating all the classification pictures.
+
+    This function creates all the classification pictures after training has
+    concluded. It has been moved to one function in order to simplify the code
+    in the main network file.
+    """
+
+    # Reinitialize the testing dataset handle.
+    sess.run(test_iter.initializer)
+
+    # Create a bunch of plots.
+    for x in range(50):
+        try:
+            lab, pred = sess.run([test_label, soft_mlp_test])
+
+            #TODO: Remove a when you're done debugging this.
+            laughter_plotter(pred, lab, pics_save_path, x, 0.02,
+                    batch_size, window_length)
+
+        except:
+            pass
 
 def laughter_plotter(prediction, label, path, number, time_step, batch_size,
         window_length):
@@ -56,6 +82,20 @@ def laughter_plotter(prediction, label, path, number, time_step, batch_size,
     plt.clf()
     plt.close(fig)
 
+def save_final_confusion_matrixes(conf, pics_save_path):
+    """ Saves a normalized and un-normalized confusion matrix.
+
+    Saves a normalized and un-normalized confusion matrix. It is done in a
+    seperate file in order to save space in the main network file.
+    """
+
+    save_confusion_matrix(conf, pics_save_path,
+            classes=['Not Laughter', 'Laughter'],
+            name='final_confusion_matrix')
+    save_confusion_matrix(conf, pics_save_path,
+            classes=['Not Laughter', 'Laughter'], normalize=True,
+            name='final_norm_confusion_matrix')
+
 def save_confusion_matrix(cm, path, classes, normalize=False,
             title='Confusion Matrix', cmap=plt.cm.Blues, name=None):
 
@@ -102,6 +142,36 @@ def save_confusion_matrix(cm, path, classes, normalize=False,
     # Remove the plot from memory so it doesn't effect later plotting functions.
     plt.clf()
     plt.close(fig)
+
+def multiple_roc_curve_plotter(sess, test_label, soft_mlp_test, test_iter,
+        pics_save_path):
+
+    """ Creates the data to plot the ROC curve.
+
+    Moved into a seperate function in order to reduce the amount of code in the
+    actualy sequence network file, this program creates ROC curves for the
+    classified data and saves it as a picture.
+    """
+
+    sess.run(test_iter.initializer)
+    concat_lab = np.array([])
+    concat_pred = np.array([])
+
+    flag = False
+    while(1):
+        try:
+            lab, pred = sess.run([test_label, soft_mlp_test])
+            if flag == False:
+                concat_lab = lab
+                concat_pred = pred
+                flag = True
+            concat_lab = np.concatenate((concat_lab, lab), axis=0)
+            concat_pred = np.concatenate((concat_pred, pred), axis=0)
+        except tf.errors.OutOfRangeError:
+            break
+
+    roc_curve_plotter(concat_pred[:,0], concat_lab[:,0], pics_save_path, name='laughter.png')
+    roc_curve_plotter(concat_pred[:,1], concat_lab[:,1], pics_save_path, name='non_laughter.png')
 
 def roc_curve_plotter(prediction, label, path=None, name=None):
     """ Computes and plots the ROC curve for the test dataset.

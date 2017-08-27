@@ -94,16 +94,16 @@
 	* How about only removing the mean, not changing the stddev?
 * Make google Listen to some of the laughter from my audio sample.
 * Get someone else to classify laughter in my dataset.							**DONE**
-	* Analyse the difference.
+	* Analyse the difference.													**DONE**
 * Implement RELU clipping														**DONE**
 * Implement RELU dropout														**DONE**
 * Implement nested cross-validation
-* Investigate tf.app.flags as a potential hyperparam parsing technique.
+* Investigate tf.app.flags as a potential hyperparam parsing technique.			**DONE** - It's actually not that good.
 * Restructure folders to include more actual project things inside this repo.
 * Start writing report and maybe also include that in this repo.
 * Make the laughter plotter function take batch_size into account.				**DONE**
-* Move the cost function to helpers to clean things up.
-	* When doing it, add the ability to easily change it.
+* Move the cost function to helpers to clean things up.							**DONE**
+	* When doing it, add the ability to easily change it.						**DONE**
 * Xavier initialization															**DONE**
 * Double check the cost function actually works like you think it does.			
 * Add equal error rate, and other metrics to the metrics class?					
@@ -113,3 +113,5 @@
 * Dump audio																		
 	* Dump laughter classified training audio										
 	* Dump laughter classified test audio										
+* Add weight decay to stop values from getting too large?
+* Update other files to be in line with sequence_net.py.

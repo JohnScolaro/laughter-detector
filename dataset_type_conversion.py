@@ -13,7 +13,7 @@ def writer():
         print("Starting file number " + str(file_num))
 
         # Get the name of a file to convert
-        name = os.path.join(directory, '../Dataset/') + str(file_num) + "_dataset.csv"
+        name = os.path.join(directory, 'dataset/') + str(file_num) + "_dataset.csv"
 
         # Load the file into an array
         try:
@@ -22,7 +22,7 @@ def writer():
             continue
 
         # Create the name of the file to save our compressed data
-        record_name = os.path.join(directory, '../Dataset/') + str(file_num) + "_dataset.tfrecord"
+        record_name = os.path.join(directory, 'dataset/') + str(file_num) + "_dataset.tfrecord"
 
         # Create a TFRecord writer
         writer = tf.python_io.TFRecordWriter(record_name)
@@ -48,9 +48,14 @@ def writer():
                                 value=[int(data[entry][20])]
                             )
                         ),
+                        'sequence': tf.train.Feature(
+                            int64_list=tf.train.Int64List(
+                                value=[int(data[entry][21])]
+                            )
+                        ),
                         'label': tf.train.Feature(
                             int64_list=tf.train.Int64List(
-                                value=data[entry][21:23].astype(int).tolist()
+                                value=data[entry][22:24].astype(int).tolist()
                             )
                         )
                     }

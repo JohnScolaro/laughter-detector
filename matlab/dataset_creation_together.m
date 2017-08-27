@@ -17,7 +17,7 @@ for number = 1:files
     disp('Creating Data File');
     
     % Load song
-    [y, Fs] = audioread(strcat(num, '.wav'));
+    [y, Fs] = audioread(strcat('C:\Users\John\Desktop\Thesis Project\laughter-detector\modified_audio\', num, '.wav'));
 
     % MFCCs
     [cepstra,aspectrum,pspectrum] = melfcc(y, Fs, 'maxfreq', 8000, 'numcep', 20, 'nbands', 22, 'wintime', 0.02, 'hoptime', 0.02);
@@ -55,8 +55,9 @@ for number = 1:files
 
     % Load laughter_times. Values in ms.
     try
-        laughter_times = csvread(strcat(num, '.ltimes'));
+        laughter_times = csvread(strcat('../modified_audio/john_scolaro/', num, '.ltimes'));
     catch
+        disp('Could not find laughter times file, or file is empty.');
         laughter_times = [];
     end
     laughter_times = transpose(round(laughter_times / 20));
@@ -72,7 +73,10 @@ for number = 1:files
         end
     end
     
-    csvwrite(strcat(num, '_dataset.csv'), [transpose(cept_d_dd), transpose(recording_labels), transpose(nn_labels)]);
+    % Create last vector, counting upwards. This is used for timing.
+    count = 1:1:length(cept_d_dd);
+    
+    csvwrite(strcat(num, '_dataset.csv'), [transpose(cept_d_dd), transpose(recording_labels), transpose(count), transpose(nn_labels)]);
 
 end
 

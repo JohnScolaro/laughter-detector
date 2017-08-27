@@ -47,6 +47,8 @@ def visualize_laughter_classification(file_name, start_time=None, stop_time=None
     fig = plt.figure()
 
     plt.plot(t, summation)
+    plt.xlabel('Time (ms)')
+    plt.ylabel('Laughter Probability')
     plt.show()
 
 def get_immediate_subdirectories(a_dir):

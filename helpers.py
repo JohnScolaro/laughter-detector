@@ -1,3 +1,4 @@
+# Other Libs
 import os
 import webbrowser
 import tensorflow as tf
@@ -11,6 +12,9 @@ import re
 import itertools
 import io
 import random
+
+# My Libs
+import plotters
 
 ################################################################################
 # TensorBoard
@@ -227,12 +231,12 @@ def input_pipeline2(filename_list, batch_size, train_test_split_method='file',
     train_dataset = tf.contrib.data.TFRecordDataset(train_filename_list)
     train_dataset = train_dataset.batch(batch_size)
     train_dataset = train_dataset.map(_parse_function)
-    train_dataset = train_dataset.filter(lambda a, b, c: tf.equal(tf.shape(a)[0], batch_size))
+    train_dataset = train_dataset.filter(lambda a, b, c, d: tf.equal(tf.shape(a)[0], batch_size))
 
     test_dataset = tf.contrib.data.TFRecordDataset(test_filename_list)
     test_dataset = test_dataset.batch(batch_size)
     test_dataset = test_dataset.map(_parse_function)
-    test_dataset = test_dataset.filter(lambda a, b, c: tf.equal(tf.shape(a)[0], batch_size))
+    test_dataset = test_dataset.filter(lambda a, b, c, d: tf.equal(tf.shape(a)[0], batch_size))
 
     # Optionally shuffle
     if shuffle == True:
@@ -256,17 +260,20 @@ def _parse_function(proto):
     test = tf.parse_example(proto, features={
         'data': tf.FixedLenFeature([20], tf.float32),
         'class': tf.FixedLenFeature([1], tf.int64),
+        'sequence': tf.FixedLenFeature([1], tf.int64),
         'label': tf.FixedLenFeature([2], tf.int64)
     })
 
     data = test['data']
     clip = tf.cast(test['class'], tf.int32)
+    sequence = tf.cast(test['sequence'], tf.int32)
     labels = tf.cast(test['label'], tf.int32)
 
-    return data, clip, labels
+    return data, clip, sequence, labels
 
-def input_pipeline_data_sequence_creator(data, label, batch_size, window_length,
-        num_features, num_classes, run_length='short'):
+def input_pipeline_data_sequence_creator(data, clip, sequence, label,
+        batch_size, window_length, num_features, num_classes,
+        run_length='short', shuffle=False):
     """ Takes a batch of data and labels, and creates a batch of sequences.
 
     This function takes a batch (should be consecutive or the sequences won't
@@ -323,6 +330,12 @@ def input_pipeline_data_sequence_creator(data, label, batch_size, window_length,
     windowed_labels = tf.slice(label, [window_length // 2, 0],
             [batch_size - window_length + 1, num_classes])
 
+    windowed_clip = tf.slice(clip, [window_length // 2, 0],
+            [batch_size - window_length + 1, num_classes])
+
+    windowed_sequence = tf.slice(sequence, [window_length // 2, 0],
+            [batch_size - window_length + 1, num_classes])
+
     if run_length == 'long':
         list_of_windows_of_data = []
         for x in range(batch_size - window_length + 1):
@@ -333,7 +346,7 @@ def input_pipeline_data_sequence_creator(data, label, batch_size, window_length,
         windowed_data = tf.map_fn(lambda i: data[i:i + window_length],
                 tf.range(batch_size - window_length + 1), dtype=tf.float32)
 
-    return windowed_data, windowed_labels
+    return windowed_data, windowed_clip, windowed_sequence, windowed_labels
 
 ################################################################################
 # Models
@@ -674,6 +687,20 @@ def ltsm_model(data_input, num_features, num_classes, n_hidden=128):
 
     return data_prediction
 
+def cost_function(label, prediction, cost_type='entropy'):
+
+    weighted_labels = tf.multiply(label, tf.constant([1, 32], dtype=tf.int32), name='add_weight_to_labels')
+
+    if (cost_type == 'entropy'):
+        cost = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(
+                logits=prediction, labels=weighted_labels, name="cost_op"))
+    elif (cost_type == 'mean_squared'):
+        cost = tf.reduce_mean(tf.squared_difference(prediction, tf.cast(weighted_labels, tf.float32)))
+
+    tf.summary.scalar('cost', cost)
+
+    return cost
+
 ################################################################################
 # Metrics
 ################################################################################
@@ -971,6 +998,41 @@ class Metrics(object):
     def __init__(self):
         self.sensitivity_and_specificity_list = []
 
+    def end_of_epoch_sens_spec(self, sess, accuracy, confusion, test_op,
+            reset_op, logger, cur_epoch_num, pics_save_path):
+        """ Performs all end of epoch calculations.
+
+        This function was made to perform all calculations for the sensitivity
+        and specificity all at once. This saves a bunch of space in the actual
+        network file and makes it all look much neater.
+        """
+
+        while 1:
+
+            try:
+                sess.run(test_op)
+
+            except tf.errors.OutOfRangeError:
+
+                acc, conf = sess.run([accuracy, confusion])
+                print("Accuracy: {:.5f}".format(acc))
+                print("Confusion Matrix:")
+                print(conf)
+                logger.log_scalar("Test_Accuracy", acc, cur_epoch_num)
+                plotters.save_confusion_matrix(conf, pics_save_path,
+                        classes=['Not Laughter', 'Laughter'],
+                        name='confusion_at_epoch_' + str(cur_epoch_num))
+                sens, spec = self.sensitivity_and_specificity(conf)
+                print("Sensitivity: {:.3f}, Specificity: {:.3f}".format(sens, spec))
+                logger.log_scalar("Sensitivity", sens, cur_epoch_num)
+                logger.log_scalar("Specificity", spec, cur_epoch_num)
+
+                # Reset streaming metrics
+                sess.run(reset_op)
+                break
+
+        return conf
+
     def sensitivity_and_specificity(self, conf):
         """ Calculates the sensitivity and specificity given a confusion matrix.
 
@@ -991,8 +1053,15 @@ class Metrics(object):
         except:
             return None, None
 
-        sens = conf[1][1] / (conf[1][1] + conf[1][0])
-        spec = conf[0][0] / (conf[0][0] + conf[0][1])
+        if ((conf[1][1] + conf[1][0]) == 0):
+            sens = 0
+        else:
+            sens = conf[1][1] / (conf[1][1] + conf[1][0])
+
+        if ((conf[0][0] + conf[0][1]) == 0):
+            spec = 0
+        else:
+            spec = conf[0][0] / (conf[0][0] + conf[0][1])
 
         self.sensitivity_and_specificity_list.append((sens, spec))
 

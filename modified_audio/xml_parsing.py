@@ -90,7 +90,7 @@ def histogram(data_list):
 	ax.set_axisbelow(True)
 
 	# the histogram of the data
-	n, bins, patches = plt.hist(x, 40, normed=1, facecolor='green', alpha=0.75, ec='black')
+	n, bins, patches = plt.hist(x, 40, normed=0, facecolor='green', alpha=0.75, ec='black')
 
 	plt.xlabel('Time (ms)')
 	plt.ylabel('Frequency')
@@ -109,6 +109,7 @@ def get_immediate_subdirectories(a_dir):
 # Create our list of files
 list_of_files = []
 for subdirectory in get_immediate_subdirectories(os.path.dirname(__file__)):
+#subdirectory = os.path.join(os.path.dirname(__file__), 'john_scolaro') # This only looks at a single person's classification
 	for file_number in range(100):
 		file_path = os.path.join(subdirectory, str(file_number + 1) + ".eaf")
 		if os.path.isfile(file_path):
