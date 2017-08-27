@@ -7,8 +7,8 @@ import itertools
 import os
 from sklearn import metrics
 
-def multiple_laughter_plotter(sess, test_label, soft_mlp_test, test_iter,
-        pics_save_path, batch_size, window_length):
+def multiple_laughter_plotter(sess, test_label, test_clip, test_seq,
+        soft_mlp_test, test_iter, pics_save_path, batch_size, window_length):
 
     """ A function which handles creating all the classification pictures.
 
@@ -23,17 +23,18 @@ def multiple_laughter_plotter(sess, test_label, soft_mlp_test, test_iter,
     # Create a bunch of plots.
     for x in range(50):
         try:
-            lab, pred = sess.run([test_label, soft_mlp_test])
+            lab, pred, clip, seq = sess.run([test_label, soft_mlp_test,
+                    test_clip, test_seq])
 
-            #TODO: Remove a when you're done debugging this.
-            laughter_plotter(pred, lab, pics_save_path, x, 0.02,
+            #TODO: Remove when you're done debugging this.
+            laughter_plotter(pred, lab, clip, seq, pics_save_path, x, 0.02,
                     batch_size, window_length)
 
-        except:
+        except tf.errors.OutOfRangeError:
             pass
 
-def laughter_plotter(prediction, label, path, number, time_step, batch_size,
-        window_length):
+def laughter_plotter(prediction, label, clip, sequence, path, number, time_step,
+        batch_size, window_length):
     """ Plots predictions and labels visually.
 
     Inputs:
@@ -46,6 +47,7 @@ def laughter_plotter(prediction, label, path, number, time_step, batch_size,
     This function plots the predictions and labels against eachother, so we can
     see how accurate our function actually is visually.
     """
+
     prediction = np.transpose(prediction)[1]
     label = np.transpose(label)[1]
 
@@ -59,10 +61,17 @@ def laughter_plotter(prediction, label, path, number, time_step, batch_size,
     if batch_size < 600:
         plot_length = batch_size - window_length - 1
 
+    # Plot the predictions
     plt.plot(times[0:plot_length], prediction[0:plot_length], 'b', linewidth=1)
 
     # Plot the labels.
     plt.plot(times[0:plot_length], label[0:plot_length], 'k', linewidth=2)
+
+    start_time = sequence[0] / 50
+    m, s = divmod(start_time, 60)
+    clip = str(int(clip[0]))
+    plt.title("Plot of audio file: \"" + clip + ".wav\" starting at time " + \
+            str(int(m)) + ":" + str(int(s)) + ".")
 
     # Do custom pretty things like axis labels, legend, and colours.
     plt.xlabel('Time (s)')

@@ -331,10 +331,10 @@ def input_pipeline_data_sequence_creator(data, clip, sequence, label,
             [batch_size - window_length + 1, num_classes])
 
     windowed_clip = tf.slice(clip, [window_length // 2, 0],
-            [batch_size - window_length + 1, num_classes])
+            [batch_size - window_length + 1, 1])
 
     windowed_sequence = tf.slice(sequence, [window_length // 2, 0],
-            [batch_size - window_length + 1, num_classes])
+            [batch_size - window_length + 1, 1])
 
     if run_length == 'long':
         list_of_windows_of_data = []

@@ -201,8 +201,8 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
     # Do all the "end of training" testing.
 
     # Plot the laughter classification plots.
-    plotters.multiple_laughter_plotter(sess, test_label, soft_mlp_test,
-            test_iter, pics_save_path, batch_size, window_length)
+    plotters.multiple_laughter_plotter(sess, test_label, test_clip, test_seq,
+            soft_mlp_test, test_iter, pics_save_path, batch_size, window_length)
 
     # Plot the ROC curves.
     plotters.multiple_roc_curve_plotter(sess, test_label, soft_mlp_test,

@@ -26,7 +26,7 @@ for number = 1:files
     % For the cepstra matrix, take each row and subtract the mean, and
     % divide by the standard deviation to normalize it.
     for i = 1:20
-        cepstra(1,:) = (cepstra(1,:) - mean(cepstra(1,:))) / std(cepstra(1,:));
+        cepstra(i,:) = (cepstra(i,:) - mean(cepstra(i,:))) / std(cepstra(i,:));
     end
     
     % Calculate deltas
