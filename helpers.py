@@ -12,6 +12,7 @@ import re
 import itertools
 import io
 import random
+import functools
 
 # My Libs
 import plotters
@@ -84,6 +85,7 @@ def _killProcessOnPort(port):
 # Input Pipeline
 ################################################################################
 
+# Depricated
 def read_from_tfrecord(filename_list, num_epochs=None):
     """ Reads data from a number of tfrecords into supported tensors.
 
@@ -114,6 +116,7 @@ def read_from_tfrecord(filename_list, num_epochs=None):
 
     return data, clip, labels
 
+# Depricated
 def input_pipeline(filename_list, batch_size, num_epochs, shuffle=False,
         multithreaded=True, train_test_ratio=0.85,
         train_test_split_method='file'):
@@ -194,6 +197,7 @@ def input_pipeline(filename_list, batch_size, num_epochs, shuffle=False,
 
     return train_feature_batch, train_label_batch, test_feature_batch, test_label_batch
 
+# Depricated
 def input_pipeline2(filename_list, batch_size, train_test_split_method='file',
         train_test_ratio=0.85, shuffle=False):
 
@@ -241,7 +245,6 @@ def input_pipeline2(filename_list, batch_size, train_test_split_method='file',
     # Optionally shuffle
     if shuffle == True:
         train_dataset = train_dataset.shuffle(20000)
-        test_dataset = test_dataset.shuffle(20000)
 
     # Return an *initializable* iterator over the dataset, which will allow us to
     # re-initialize it at the beginning of each epoch.
@@ -250,6 +253,7 @@ def input_pipeline2(filename_list, batch_size, train_test_split_method='file',
 
     return train_iter, test_iter
 
+# Depricated
 def _parse_function(proto):
     """ Function mapping a structure of tensors to another structure of tensors.
 
@@ -271,6 +275,7 @@ def _parse_function(proto):
 
     return data, clip, sequence, labels
 
+# Depricated
 def input_pipeline_data_sequence_creator(data, clip, sequence, label,
         batch_size, window_length, num_features, num_classes,
         run_length='short', shuffle=False):
@@ -348,6 +353,161 @@ def input_pipeline_data_sequence_creator(data, clip, sequence, label,
 
     return windowed_data, windowed_clip, windowed_sequence, windowed_labels
 
+def input_pipeline3(filename_list, window_length, num_classes, batch_size,
+        num_features, train_test_split_method='file', train_test_ratio=0.85,
+        shuffle=False, batch_normalize=False):
+
+    """ Takes a list of file names and creates a handle to evaluate input data.
+
+    Input pipeline 3 was creates to supercede input_pipeline2. Input_pipeline2
+    used tf.contrib.data.Dataset's to create a chain of commands to create
+    batches of input tensors, which were then turned into sequences using
+    input_pipeline_data_sequence_creator. This function was slow, and because
+    of the seperation between the two files, shuffling couldn't properly be
+    done.
+
+    Now, you simply give it a list of file names, and you can pull out a batch
+    of variable sized, optionally shuffled and normalization, optionally
+    windowed sequences, at high speed. To do so, we use the dataset mapping
+    functions _batch_norm, and _sequence_gen, to do the dirty work for us. See
+    the comments in those functions for more detailed functionality.
+    """
+
+    # Splits list of filenames into a training and test list with appropriate ratio
+    if train_test_split_method == 'file':
+        train_filename_list = list(filename_list)
+        test_filename_list = []
+        while (len(train_filename_list) / len(filename_list)) > train_test_ratio:
+            random.shuffle(train_filename_list)
+            test_filename_list.append(train_filename_list.pop())
+    else:
+        print("Not a valid train / test split method.")
+        exit(0)
+
+    # Define a `tf.contrib.data.Dataset` for iterating over one epoch of the data.
+    train_dataset = tf.contrib.data.TFRecordDataset(train_filename_list)
+    train_dataset = train_dataset.batch(batch_size)
+    train_dataset = train_dataset.map(_parse_function)
+    train_dataset = train_dataset.filter(lambda a, b, c, d: tf.equal(tf.shape(a)[0], batch_size))
+
+    test_dataset = tf.contrib.data.TFRecordDataset(test_filename_list)
+    test_dataset = test_dataset.batch(batch_size)
+    test_dataset = test_dataset.map(_parse_function)
+    test_dataset = test_dataset.filter(lambda a, b, c, d: tf.equal(tf.shape(a)[0], batch_size))
+
+    # Optionally shuffle
+    if shuffle == True:
+        train_dataset = train_dataset.shuffle(20000)
+
+    # Optional batch normalization.
+    if batch_normalize == True:
+        train_dataset = train_dataset.map(_batch_norm)
+        test_dataset = test_dataset.map(_batch_norm)
+
+    # Transform datasets into sequences.
+    train_dataset = train_dataset.map(functools.partial(_sequence_gen,
+            window_length, num_classes, batch_size, num_features))
+    test_dataset = test_dataset.map(functools.partial(_sequence_gen,
+            window_length, num_classes, batch_size, num_features))
+
+    # Return an *initializable* iterator over the dataset, which will allow us
+    # to re-initialize it at the beginning of each epoch.
+    train_iter = train_dataset.make_initializable_iterator()
+    test_iter = test_dataset.make_initializable_iterator()
+
+    return train_iter, test_iter
+
+def _batch_norm(data, clip, sequence, labels):
+
+    """ Normalizes each batch.
+
+    A function taking 4 different values, and normalizing each MFCC feature
+    individually. Returns other non-data handles unchanged.
+    """
+
+    mean, variance = tf.nn.moments(data, [0])
+    normalized_data = tf.nn.batch_normalization(data, mean, variance, None,
+            None, 1e-3)
+
+    return (normalized_data, clip, sequence, labels)
+
+def _sequence_gen(window_length, num_classes, batch_size, num_features, data,
+        clip, sequence, labels):
+
+    """ Takes a batch of data and labels, and creates a batch of sequences.
+
+    This function performs the work of input_pipeline_data_sequence_creator, but
+    in a nice and easy function which can be called by the tf.contrib.data
+    Dataset map function.
+
+    This function takes a batch (should be consecutive or the sequences won't
+    make any sense) and spits out a series of consecutive sequences made by
+    sliding a window over consecutive records of the batch. The sequences are
+    'window_length' in length.
+
+    For example, the origional data is sized: [batch_size, num_features] which
+    is a 2D matrix of batch_size consecutive records. This function transforms
+    this into a 3D matrix of [batch_size, window_length, num_features] where
+    batch_size is now: (origional batch_size - window_length + 1).
+
+    EG:
+    origional batch:
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 9],
+    [10, 11, 12],
+    [13, 14, 15]
+    Here, the batch_size = 5, and num_features = 3.
+
+    With a window_length of 3, this becomes:
+    [
+      [1, 2, 3],
+      [4, 5, 6],
+      [7, 8, 9]
+    ],
+    [
+      [4, 5, 6],
+      [7, 8, 9],
+      [10, 11, 12]
+    ],
+    [
+      [7, 8, 9],
+      [10, 11, 12],
+      [13, 14, 15]
+    ]
+
+    As you can see, the size has increased from [5, 3] to [3, 3, 3].
+
+    As for the labels, we simply select the labels of the origional set, but
+    chop off (window_length // 2) elements from the start and end of the vector
+    to ensure the label length is:
+    [origional batch_size - window_length + 1, num_classes].
+
+    Also note, this function takes the variable 'run_length'. This chooses
+    between two implimentations of the same process. One takes TensorFlow a
+    minute to set up, but halves the time to do this maths. The other is neater
+    and runs instantly, however the overhead for dynamically reshaping the
+    arrays slows down the code. This is better for short test runs where we want
+    to avoid the minute long setup overhead.
+    """
+
+    windowed_labels = tf.slice(labels, [window_length // 2, 0],
+            [batch_size - window_length + 1, num_classes])
+
+    windowed_clip = tf.slice(clip, [window_length // 2, 0],
+            [batch_size - window_length + 1, 1])
+
+    windowed_sequence = tf.slice(sequence, [window_length // 2, 0],
+            [batch_size - window_length + 1, 1])
+
+    list_of_windows_of_data = []
+    for x in range(batch_size - window_length + 1):
+        list_of_windows_of_data.append(tf.slice(data, [x, 0], [window_length,
+                num_features]))
+    windowed_data = tf.squeeze(tf.stack(list_of_windows_of_data, axis=0))
+
+    return (windowed_data, windowed_clip, windowed_sequence, windowed_labels)
+
 ################################################################################
 # Models
 ################################################################################
@@ -399,16 +559,28 @@ def multilayer_perceptron(x_train, x_test, n_inputs, n_outputs, hidden_layers,
     # Store layers weight & biases in dictionaries
     weights = {}
     biases = {}
-    sig = lambda x: tf.sigmoid(x)
-    relu = lambda x: tf.nn.relu(x)
 
     # Select the appropriate activation function
-    if activation_function == 'relu':
-        op = relu
-    elif activation_function == 'sigmoid':
-        op = sig
+    if activation_function == 'sigmoid':
+        a = lambda x: tf.sigmoid(x)
+    elif activation_function == 'relu':
+        a = lambda x: tf.nn.relu(x)
+    elif activation_function == 'tanh':
+        a = lambda x: tf.tanh(x)
     else:
-        op = relu
+        a = lambda x: tf.nn.relu(x)
+
+    if clipped == True:
+        b = lambda x: tf.minimum(a(x), lim)
+    else:
+        b = a
+
+    if dropout == True:
+        c = lambda x: tf.nn.dropout(b(x), keep_prob)
+    else:
+        c = b
+
+    op = c
 
     # Add the first layer to the dictionary
     cur_layer_num = 1
@@ -541,6 +713,10 @@ def sequence_mlp(x_train, x_test, n_features, window_length, n_outputs,
     # Select the appropriate activation function
     if activation_function == 'sigmoid':
         a = lambda x: tf.sigmoid(x)
+    elif activation_function == 'relu':
+        a = lambda x: tf.nn.relu(x)
+    elif activation_function == 'tanh':
+        a = lambda x: tf.tanh(x)
     else:
         a = lambda x: tf.nn.relu(x)
 
@@ -612,8 +788,10 @@ def sequence_mlp(x_train, x_test, n_features, window_length, n_outputs,
             biases['b1'])
     cur_layer_test = op(cur_layer_test)
     with tf.variable_scope("Layer_1_Summarys"):
-        tf.summary.image("Weights", tf.reshape(weights['w1'], [1, n_features * window_length, hidden_layers[0], 1]))
+        image_tensor = tf.reshape(weights['w1'], [1, n_features * window_length, hidden_layers[0], 1])
+        tf.summary.image("Weights", image_tensor)
         tf.summary.image("Biases", tf.reshape(biases['b1'], [1, 1, hidden_layers[0], 1]))
+        tf.summary.image("Reshaped Weights", tf.reshape(tf.reduce_mean(image_tensor, 2), [1, window_length, n_features, 1]))
         tf.summary.histogram("Weights", weights['w1'])
         tf.summary.histogram("Biases", biases['b1'])
 
@@ -627,11 +805,12 @@ def sequence_mlp(x_train, x_test, n_features, window_length, n_outputs,
                 str(cur_layer_num)]), biases['b' + str(cur_layer_num)])
         cur_layer_test = op(cur_layer_test)
         with tf.variable_scope("Layer_" + str(cur_layer_num) + "_Summarys"):
-            tf.summary.image("Weights", tf.reshape(weights['w' +
-                    str(cur_layer_num)], [1, hidden_layers[cur_layer_num - 2],
-                    layer, 1]))
+            image_tensor = tf.reshape(weights['w' + str(cur_layer_num)],
+                    [1, hidden_layers[cur_layer_num - 2], layer, 1])
+            tf.summary.image("Weights", image_tensor)
             tf.summary.image("Biases", tf.reshape(biases['b' +
                     str(cur_layer_num)], [1, 1, layer, 1]))
+            tf.summary.image("Reshaped Weights", tf.reshape(tf.reduce_mean(image_tensor, 2), [1, window_length, n_features, 1]))
             tf.summary.histogram("Weights", weights['w' + str(cur_layer_num)])
             tf.summary.histogram("Biases", biases['b' + str(cur_layer_num)])
         cur_layer_num += 1
@@ -645,7 +824,8 @@ def sequence_mlp(x_train, x_test, n_features, window_length, n_outputs,
         cur_layer_test = tf.matmul(cur_layer_test, weights['out'])
 
     with tf.variable_scope("Output_Summarys"):
-        tf.summary.image("Weights", tf.reshape(weights['out'], [1, hidden_layers[-1], n_outputs, 1]))
+        image_tensor = tf.reshape(weights['out'], [1, hidden_layers[-1], n_outputs, 1])
+        tf.summary.image("Weights", image_tensor)
         tf.summary.histogram("Weights", weights['out'])
         if output_layer_biases == True:
             tf.summary.image("Biases", tf.reshape(biases['out'], [1, 1, n_outputs, 1]))
@@ -689,7 +869,7 @@ def ltsm_model(data_input, num_features, num_classes, n_hidden=128):
 
 def cost_function(label, prediction, cost_type='entropy'):
 
-    weighted_labels = tf.multiply(label, tf.constant([1, 32], dtype=tf.int32), name='add_weight_to_labels')
+    weighted_labels = tf.multiply(label, tf.constant([1, 30], dtype=tf.int32), name='add_weight_to_labels')
 
     if (cost_type == 'entropy'):
         cost = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(

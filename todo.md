@@ -65,7 +65,7 @@
 * Change the plot size back to the default for the confusion matrix generator.	**DONE**
 * Make another program which runs net.py multiple times with different param	**DONE**
 	* Make it work well and give it a few tests.								**DONE**
-	* Clean it all up. Make helper functions to reduce code.					
+	* Clean it all up. Make helper functions to reduce code.					**DONE**
 	* Remove a few of the instances of code where you make folders if they don't exist.
 * Add dataset creation scripts to this repo										**DONE**
 * Make a "print_hyper_params" function.											**DONE**
@@ -108,11 +108,16 @@
 * Double check the cost function actually works like you think it does.			
 * Add equal error rate, and other metrics to the metrics class?					
 * Try normalizing each layer of the mlp											
-* Try shuffling, and see if it helps.											
 * Develop some more features													
-* Dump audio																		
-	* Dump laughter classified training audio										
+* Dump audio																	
+	* Dump laughter classified training audio									
 	* Dump laughter classified test audio										
 * Add weight decay to stop values from getting too large?
 * Update other files to be in line with sequence_net.py.
 * Change classification so a sequence is judged by the start, not the middle.
+* Try out the tanh activation function.											**DONE**
+* Increase feature number.
+* Reshape average node weights and save as an image of weights over time.		**DONE**
+* Move all dataset sequencing to one dataset creation function
+	* Include shuffling
+	* Include batch normalization
