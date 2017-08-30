@@ -885,6 +885,7 @@ def cost_function(label, prediction, cost_type='entropy'):
 # Metrics
 ################################################################################
 
+# Depricated
 def accuracy_and_confusion_calculation(prediction, label):
     """ Adds calculation of accuracy and confusion to the tensorflow graph.
 
@@ -907,6 +908,7 @@ def accuracy_and_confusion_calculation(prediction, label):
 
     return accuracy, confusion
 
+# Depricated
 def evaluate_accuracy(sess, accuracy, confusion):
     """ This function evaluates the accuracy of the model on the whole test set.
 
@@ -1186,6 +1188,7 @@ class Metrics(object):
         and specificity all at once. This saves a bunch of space in the actual
         network file and makes it all look much neater.
         """
+        #TODO: Add feed dict here to test out LTSM's again.
 
         while 1:
 

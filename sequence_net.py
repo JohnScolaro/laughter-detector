@@ -14,13 +14,13 @@ if len(sys.argv) < 2:
     name = "sequence_mlp_test"
 
     # Hyper Parameters
-    learning_rate = 0.00001 #0.001 #0.00006
+    learning_rate = 0.000001 #0.001 #0.00006
     beta1 = 0.7 #0.9
     beta2 = 0.9 #0.999
     epsilon = 1e-08 #1e-08
 
     # Network Params
-    training_epochs = 5
+    training_epochs = 10
     display_step = 50
     batch_size = 500 #5000
     train_test_ratio = 0.85
@@ -87,17 +87,10 @@ if len(sys.argv) > 2:
 
 # Construct input pipelines
 train_iter, test_iter = helpers.input_pipeline3(dataset_file_list,
-        window_length, n_classes, batch_size, n_input,
+        window_length, n_classes, batch_size, n_input, shuffle=True,
         batch_normalize=True)
 data, clip, seq, label = train_iter.get_next()
 test_data, test_clip, test_seq, test_label = test_iter.get_next()
-
-# Add to pipeline in order to batch sequences
-# data, clip, seq, label = helpers.input_pipeline_data_sequence_creator(data, clip, seq,
-#         label, batch_size, window_length, n_input, n_classes, run_length='long')
-# test_data, test_clip, test_seq, test_label = helpers.input_pipeline_data_sequence_creator(test_data,
-#         test_clip, test_seq, test_label, batch_size, window_length, n_input,
-#         n_classes, run_length='long')
 
 # Construct model
 mlp_train, mlp_test = helpers.sequence_mlp(data, test_data, n_input,
