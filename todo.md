@@ -118,6 +118,7 @@
 * Try out the tanh activation function.											**DONE**
 * Increase feature number.
 * Reshape average node weights and save as an image of weights over time.		**DONE**
-* Move all dataset sequencing to one dataset creation function
-	* Include shuffling
-	* Include batch normalization
+* Move all dataset sequencing to one dataset creation function					**DONE**
+	* Include shuffling															**KINDA DONE**
+	* Include batch normalization												**DONE**
+* For demo, be able to quickly give a custom audio classification

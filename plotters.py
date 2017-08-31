@@ -177,7 +177,7 @@ def multiple_roc_curve_plotter(sess, test_label, soft_mlp_test, test_iter,
             else:
                 concat_lab = np.concatenate((concat_lab, lab), axis=0)
                 concat_pred = np.concatenate((concat_pred, pred), axis=0)
-                
+
         except tf.errors.OutOfRangeError:
             break
 

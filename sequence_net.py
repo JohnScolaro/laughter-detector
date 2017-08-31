@@ -14,13 +14,13 @@ if len(sys.argv) < 2:
     name = "sequence_mlp_test"
 
     # Hyper Parameters
-    learning_rate = 0.000001 #0.001 #0.00006
+    learning_rate = 0.001 #0.001 #0.00006
     beta1 = 0.7 #0.9
     beta2 = 0.9 #0.999
     epsilon = 1e-08 #1e-08
 
     # Network Params
-    training_epochs = 10
+    training_epochs = 5
     display_step = 50
     batch_size = 500 #5000
     train_test_ratio = 0.85
@@ -58,6 +58,7 @@ directory = os.path.dirname(__file__)
 save_folder_name = helpers.get_save_dir(os.path.join(directory, 'tensorboard'), name)
 pics_save_path = os.path.join(save_folder_name, 'pics')
 log_save_path = os.path.join(save_folder_name, 'log')
+save_save_path = os.path.join(save_folder_name, 'weights')
 
 # Close any other local sessions if there are any.
 if 'session' in locals() and session is not None:
@@ -69,6 +70,8 @@ if not os.path.isdir(save_folder_name):
     os.makedirs(save_folder_name)
 if not os.path.isdir(log_save_path):
     os.makedirs(log_save_path)
+if not os.path.isdir(save_save_path):
+    os.makedirs(save_save_path)
 if len(sys.argv) > 1:
     stderr = sys.stderr
     stdout = sys.stdout
@@ -93,11 +96,14 @@ data, clip, seq, label = train_iter.get_next()
 test_data, test_clip, test_seq, test_label = test_iter.get_next()
 
 # Construct model
-mlp_train, mlp_test = helpers.sequence_mlp(data, test_data, n_input,
-        window_length, n_classes, batch_size, layers,
+mlp_train, mlp_test, weights, biases = helpers.sequence_mlp(data, test_data,
+        n_input, window_length, n_classes, batch_size, layers,
         activation_function=activation_function,
         output_layer_biases=output_layer_biases,
         initialization='Xavier', clipped=False, dropout=False)
+
+# Create a saver
+saver = helpers.create_saver(layers, weights, biases)
 
 # Define cost and optimizer
 cost = helpers.cost_function(label, mlp_train, cost_type='entropy')
@@ -192,6 +198,10 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
         conf = metrics.end_of_epoch_sens_spec(sess, accuracy, confusion,
                 test_op, reset_op, logger, cur_epoch_num,
                 pics_save_path)
+
+        # Save the variables if it's a good run
+        if (metrics.best_epoch_so_far()):
+            saver.save(sess, os.path.join(save_save_path, 'data'))
 
     # Do all the "end of training" testing.
 

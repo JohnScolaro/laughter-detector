@@ -15,13 +15,13 @@ if len(sys.argv) < 2:
     name = "ltsm_test"
 
     # Hyper Parameters
-    learning_rate = 0.0001 #0.001
+    learning_rate = 0.00001 #0.001
     beta1 = 0.9 #0.9
     beta2 = 0.999 #0.999
     epsilon = 1e-08 #1e-08
 
     # Network Params
-    training_epochs = 5
+    training_epochs = 4
     display_step = 100
     batch_size = 500
     train_test_ratio = 0.85
@@ -190,25 +190,26 @@ with tf.Session(config=tf.ConfigProto(log_device_placement=True)) as sess:
         # Do all the "end of epoch" testing here:
         conf = metrics.end_of_epoch_sens_spec(sess, accuracy, confusion,
                 test_op, reset_op, logger, cur_epoch_num,
-                pics_save_path)
+                pics_save_path, rnn=True, test_data=test_data,
+                test_labels=test_label, p1=input_data_placeholder, p2=input_label_placeholder)
 
     # Do all the "end of training" testing.
 
-    # Plot the laughter classification plots.
-    plotters.multiple_laughter_plotter(sess, test_label, test_clip, test_seq,
-            soft_mlp_test, test_iter, pics_save_path, batch_size, window_length)
-
-    # Plot the ROC curves.
-    plotters.multiple_roc_curve_plotter(sess, test_label, soft_mlp_test,
-            test_iter, pics_save_path)
+    # # Plot the laughter classification plots.
+    # plotters.multiple_laughter_plotter(sess, test_label, test_clip, test_seq,
+    #         soft_mlp_test, test_iter, pics_save_path, batch_size, window_length)
+    #
+    # # Plot the ROC curves.
+    # plotters.multiple_roc_curve_plotter(sess, test_label, soft_mlp_test,
+    #         test_iter, pics_save_path)
 
     # Print useful information
     print("Training Completed in {:.3f} seconds.".format(time.time() - start_time))
     sens, spec, epoch = metrics.get_max_sensitivity_and_specificity()
     print("Best test run was epoch {:d} of {:d} with a sensitivity of {:.3f}, and specificity of {:.3f}.".format(epoch + 1, training_epochs, sens, spec))
 
-    # Save final confusion matrices
-    plotters.save_final_confusion_matrixes(conf, pics_save_path)
+    # # Save final confusion matrices
+    # plotters.save_final_confusion_matrixes(conf, pics_save_path)
 
 # Finally, open our TensorBoard tab (If not being called from net_runner)
 if len(sys.argv) < 2:

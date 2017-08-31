@@ -254,28 +254,6 @@ def input_pipeline2(filename_list, batch_size, train_test_split_method='file',
     return train_iter, test_iter
 
 # Depricated
-def _parse_function(proto):
-    """ Function mapping a structure of tensors to another structure of tensors.
-
-    I give it the protos from my tfrecord files, and it processes the binary
-    into three tensors. One for data, the clip, and the label.
-    """
-
-    test = tf.parse_example(proto, features={
-        'data': tf.FixedLenFeature([20], tf.float32),
-        'class': tf.FixedLenFeature([1], tf.int64),
-        'sequence': tf.FixedLenFeature([1], tf.int64),
-        'label': tf.FixedLenFeature([2], tf.int64)
-    })
-
-    data = test['data']
-    clip = tf.cast(test['class'], tf.int32)
-    sequence = tf.cast(test['sequence'], tf.int32)
-    labels = tf.cast(test['label'], tf.int32)
-
-    return data, clip, sequence, labels
-
-# Depricated
 def input_pipeline_data_sequence_creator(data, clip, sequence, label,
         batch_size, window_length, num_features, num_classes,
         run_length='short', shuffle=False):
@@ -395,10 +373,6 @@ def input_pipeline3(filename_list, window_length, num_classes, batch_size,
     test_dataset = test_dataset.map(_parse_function)
     test_dataset = test_dataset.filter(lambda a, b, c, d: tf.equal(tf.shape(a)[0], batch_size))
 
-    # Optionally shuffle
-    if shuffle == True:
-        train_dataset = train_dataset.shuffle(20000)
-
     # Optional batch normalization.
     if batch_normalize == True:
         train_dataset = train_dataset.map(_batch_norm)
@@ -410,12 +384,37 @@ def input_pipeline3(filename_list, window_length, num_classes, batch_size,
     test_dataset = test_dataset.map(functools.partial(_sequence_gen,
             window_length, num_classes, batch_size, num_features))
 
+    # Optionally shuffle
+    if shuffle == True:
+        train_dataset = train_dataset.shuffle(2000)
+
     # Return an *initializable* iterator over the dataset, which will allow us
     # to re-initialize it at the beginning of each epoch.
     train_iter = train_dataset.make_initializable_iterator()
     test_iter = test_dataset.make_initializable_iterator()
 
     return train_iter, test_iter
+
+def _parse_function(proto):
+    """ Function mapping a structure of tensors to another structure of tensors.
+
+    I give it the protos from my tfrecord files, and it processes the binary
+    into three tensors. One for data, the clip, and the label.
+    """
+
+    test = tf.parse_example(proto, features={
+        'data': tf.FixedLenFeature([20], tf.float32),
+        'class': tf.FixedLenFeature([1], tf.int64),
+        'sequence': tf.FixedLenFeature([1], tf.int64),
+        'label': tf.FixedLenFeature([2], tf.int64)
+    })
+
+    data = test['data']
+    clip = tf.cast(test['class'], tf.int32)
+    sequence = tf.cast(test['sequence'], tf.int32)
+    labels = tf.cast(test['label'], tf.int32)
+
+    return data, clip, sequence, labels
 
 def _batch_norm(data, clip, sequence, labels):
 
@@ -507,6 +506,13 @@ def _sequence_gen(window_length, num_classes, batch_size, num_features, data,
     windowed_data = tf.squeeze(tf.stack(list_of_windows_of_data, axis=0))
 
     return (windowed_data, windowed_clip, windowed_sequence, windowed_labels)
+
+def demo_imput_pipeline():
+    """ Makes only one handle, to quickly classify demo audio.
+
+    """
+    
+    pass
 
 ################################################################################
 # Models
@@ -831,7 +837,7 @@ def sequence_mlp(x_train, x_test, n_features, window_length, n_outputs,
             tf.summary.image("Biases", tf.reshape(biases['out'], [1, 1, n_outputs, 1]))
             tf.summary.histogram("Biases", biases['out'])
 
-    return cur_layer_train, cur_layer_test
+    return cur_layer_train, cur_layer_test, weights, biases
 
 def ltsm_model(data_input, num_features, num_classes, n_hidden=128):
     """ Creates an LTSM model to classify a sequence of audio data.
@@ -869,17 +875,45 @@ def ltsm_model(data_input, num_features, num_classes, n_hidden=128):
 
 def cost_function(label, prediction, cost_type='entropy'):
 
-    weighted_labels = tf.multiply(label, tf.constant([1, 30], dtype=tf.int32), name='add_weight_to_labels')
+    weighted_labels = tf.multiply(label, tf.constant([1, 27], dtype=tf.int32), name='add_weight_to_labels')
 
     if (cost_type == 'entropy'):
         cost = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(
                 logits=prediction, labels=weighted_labels, name="cost_op"))
     elif (cost_type == 'mean_squared'):
-        cost = tf.reduce_mean(tf.squared_difference(prediction, tf.cast(weighted_labels, tf.float32)))
+        cost = tf.reduce_sum(tf.squared_difference(prediction, tf.cast(weighted_labels, tf.float32)))
 
     tf.summary.scalar('cost', cost)
 
     return cost
+
+def create_saver(layers, weights, biases):
+    """ Create a saver to save the variable weights to during training.
+
+    Saves the node weights of our model. Will allow us to restore the state of
+    the network whenever we want. Might be potentially useful for my thesis
+    demonstration.
+    """
+
+    list_of_variables = []
+
+    # Save hidden node weights and biases
+    for x in range(len(layers)):
+        list_of_variables.append(weights['w' + str(x + 1)])
+        list_of_variables.append(biases['b' + str(x + 1)])
+
+    # Save output node weights and biases
+    list_of_variables.append(weights['out'])
+
+    try:
+        list_of_variables.append(biases['out'])
+    except KeyError:
+        pass
+
+    saver = tf.train.Saver(list_of_variables)
+
+    return saver
+
 
 ################################################################################
 # Metrics
@@ -1181,19 +1215,29 @@ class Metrics(object):
         self.sensitivity_and_specificity_list = []
 
     def end_of_epoch_sens_spec(self, sess, accuracy, confusion, test_op,
-            reset_op, logger, cur_epoch_num, pics_save_path):
+            reset_op, logger, cur_epoch_num, pics_save_path, rnn=False,
+            test_data=None, test_labels=None, p1=None, p2=None):
         """ Performs all end of epoch calculations.
 
         This function was made to perform all calculations for the sensitivity
         and specificity all at once. This saves a bunch of space in the actual
         network file and makes it all look much neater.
-        """
-        #TODO: Add feed dict here to test out LTSM's again.
 
+        Needs all variables before rnn. If using any model which needs
+        placeholders, then set rnn to True, and enter all the other variables
+        which are none by default. Otherwise just ignore them.
+        """
+
+        #TODO: Add feed dict here to test out LTSM's again.
+        batch_size = 500
         while 1:
 
             try:
-                sess.run(test_op)
+                if (rnn == False):
+                    sess.run(test_op)
+                else:
+                    d, l = sess.run([test_data, test_labels])
+                    sess.run(test_op, feed_dict={p1: d, p2: l})
 
             except tf.errors.OutOfRangeError:
 
@@ -1265,6 +1309,22 @@ class Metrics(object):
             epoch += 1
 
         return maximum
+
+    def best_epoch_so_far(self):
+        """ Returns True is this is the best epoch so far.
+
+        Used to save the variables. Obviously this is only useful if this is
+        the best state so far.
+        """
+
+        current = self.sensitivity_and_specificity_list[-1][0] + \
+                self.sensitivity_and_specificity_list[-1][1]
+        for sens, spec in self.sensitivity_and_specificity_list[0:-1]:
+            if (sens + spec) > current:
+                return False
+
+        return True
+
 
 class Logger(object):
     """Logging in tensorboard without tensorflow ops.
