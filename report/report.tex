@@ -54,7 +54,7 @@
 
 \null\vspace{\fill}
 \begin{abstract}
-	This thesis proposes a new way of detecting laughter using neural networks to determine whether audio contains laughter, on a frame-by-frame level, rather than comparing large segments of audio for laughter. Several different methods are tried and tested, with the results presented here, with a simple feed forward neural network achieving the greatest accuracy, when trained on sequences of MFCC's from audio.
+	This thesis proposes a new way of detecting laughter using neural networks. It detects laughter on a frame-by-frame level, allowing it to estimate when laughter starts and stops which contrasts to older methods of laughter detection which classify a chunk of audio all at once. Several different methods are tried and tested, with the results presented here, with a simple feed forward neural network achieving the greatest accuracy when trained on sequences of MFCC's from audio.
 \end{abstract}
 \vspace{\fill}
 
@@ -76,24 +76,27 @@
 	% How I'm improving it
 	% What the results were super briefly
 
-
+This report discusses the results obtained by attempting to detect spontaneous human laughter in audio with neural networks. In the process of doing this, many choices were made in all aspects of the design of this project, and this report will attempt to explain all of them in as much detail as possible - starting with the collecting of audio to create a dataset of speech and laughter, and ending with the creation of different networks and a discussion of their results.
 
 \subsection{Motivation}
 
 % Why I am trying to do it
 
+Extracting information from audio has many uses, including speech recognition and song detection, which many people use every day. In audio recordings of human speech, more information is present than just the spoken words. Humans can glean information from the speaker, from the speed at which they talk, the tone and volume used,\cite{dellaert1996recognizing} or perhaps the amount of fillers, `umming' and `ahhhing', between sentences.\cite{brennan1995feeling} In the book ``Silent Messages''\cite{mehrabian1971silent} the author A. Mehrabian talks about his work on non-verbal communication. He concludes that listeners assign 55\% of their attention to the speakers stance and body movements, 7\% on the words they say, and 38\% on the way they say them. The mood of the speaker gives further information about what their words mean, and how they feel. Being able to detect these various audio cues allows for better interpretation of the sentiments underlying human speech. Examples of systems which utilise these additional audio features include anger detection, which could be implemented in call centres to route frustrated callers directly to humans operators,\cite{yacoub2003recognition} or the detection of applause, which can be used to segment video and summarize large events.\cite{cai2003highlight} One of the most prominent non-verbal features of human speech is laughter as it gives information about the mood of the laugher and can be associated with several emotions. State-of-the-art speech detection systems are approaching 100\% accuracy at determining exactly what is being said, but detecting laughter is one of the first of many steps to attempt to decode the context in which it is being said.\\
+\\
+Laughter is often a loud and repetitive sound, and similarly to speech, easily detectable by a human listener. However due to the complexity of the sound, it is difficult to precisely classify computationally. These types of problems are perfect for machine learning. Questions which can be answered by any human, but when asked how, it isn't really explainable. ``How can you tell there is a face in that picture?'' or ``What words are being said in this audio?'' are other examples. As a human, you just can. There is no simple mathematical expression you can write to distinguish exactly what is in a picture based on the pixels, but if you look at the picture, you can simply see what is there. There are many types of laughter, which can be categorized a number of ways. For example, a simple classifier separates laughter into voiced and unvoiced categories, where voiced laughter is louder and song like, while unvoiced laughter consists of grunts and snorts. Additionally, laughter is used differently in different scenarios to mean various things: from softer polite laughs, to louder more jovial laughs used amongst friends.\cite{tanaka2011acoustic} Laughter also changes in the company of people of different gender and nationality,\cite{campbell2007whom} and affects the opinions of people listening.\cite{bachorowski2001not} Accurate laughter detection has many practical applications. These applications include but are not limited to: the detection of humorous content, improvement of speech recognition software by recognising non-speech sounds, and facilitating more natural machine-human communication. Previous studies can be divided into those which attempt to detect laughter in audio, and those which attempt to classify the type of laughter. The best laughter detectors use standard speech recognition features and discriminating techniques\cite{cosentino2016quantitative}, with some of the best classifiers achieving ~10\% error.\cite{gosztolya2016laughter,knox2007automatic,truong2007automatic,truong2005automatic} Extending on laughter detection, laughter classification allows further unvoiced information to be extracted from audio about the type of laughter. Knowing whether laughter is uncomfortable or genuine can be used to improve machine-human interaction. Laughter classification has been shown to work successfully using Hidden Markov Models (HMM) on standard audio features\cite{tanaka2011acoustic}, however this research was only tested with a training set of ~150 laughter segments, so it is far from comprehensive.\\
+\\
+At the University of Queensland, this project is of interest to two different research groups. The linguistics department who hopes to learn more about the general structure of laughter and different types of laughter, and the Complex \& Intelligent Systems Research Division, which is both interested in laughter and it's detection for interaction with humans, and the neural networks behind its detection.
+
+Curiousity
+
 Laughter classification is potentially useful for a large number of reasons.
 
 Nobody else has done it this particular way before.
 
-Extracting information from audio has many uses, including speech recognition and song detection, which many people use every day. In audio recordings of human speech, more information is present than just
-the spoken words. Humans can glean information from the speaker, from the speed at which they talk, the tone and volume used,\cite{dellaert1996recognizing} or perhaps the amount of fillers, `umming' and `ahhhing', between sentences.\cite{brennan1995feeling} The mood of the speaker gives further information about what their words mean, and how they feel. Being able to detect these various audio cues allows for better interpretation of the sentiments underlying
-human speech. Examples of systems which utilise these additional audio features include anger detection, which could be implemented in call centres to route frustrated callers directly to humans operators,\cite{yacoub2003recognition} or the detection of applause, which can be used to segment video and summarize large events.\cite{cai2003highlight} One of the most prominent non-verbal features of human speech is laughter as it gives information about the
-mood of the laugher and can be associated with several emotions.
-
 \subsection{Aim}
 
-% What it is what I'm trying to do
+% What it is that I'm trying to do
 
 Design an algorithm to detect laughter as best it can.
 
@@ -104,6 +107,10 @@ Can we learn anything interesting about sequence detection with neural networks?
 \section{Background}
 
 % An in depth look into the state of the field of study so far
+
+Datasets and preprocessing.
+
+Neural networks and the like for things similar to this.
 
 \section{Methodology}
 
