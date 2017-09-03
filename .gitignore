@@ -9,6 +9,7 @@ figs/
 
 # Not the whole processed dataset
 dataset/
+demo/audio_file/
 
 # Not the modified dataset or laughter classifications
 modified_audio/*wav
@@ -25,3 +26,5 @@ origional_audio/
 *.pdf
 *.gz
 *.toc
+*.bbl
+*.blg

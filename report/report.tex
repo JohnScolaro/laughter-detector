@@ -86,6 +86,11 @@ Laughter classification is potentially useful for a large number of reasons.
 
 Nobody else has done it this particular way before.
 
+Extracting information from audio has many uses, including speech recognition and song detection, which many people use every day. In audio recordings of human speech, more information is present than just
+the spoken words. Humans can glean information from the speaker, from the speed at which they talk, the tone and volume used,\cite{dellaert1996recognizing} or perhaps the amount of fillers, `umming' and `ahhhing', between sentences.\cite{brennan1995feeling} The mood of the speaker gives further information about what their words mean, and how they feel. Being able to detect these various audio cues allows for better interpretation of the sentiments underlying
+human speech. Examples of systems which utilise these additional audio features include anger detection, which could be implemented in call centres to route frustrated callers directly to humans operators,\cite{yacoub2003recognition} or the detection of applause, which can be used to segment video and summarize large events.\cite{cai2003highlight} One of the most prominent non-verbal features of human speech is laughter as it gives information about the
+mood of the laugher and can be associated with several emotions.
+
 \subsection{Aim}
 
 % What it is what I'm trying to do
@@ -93,6 +98,8 @@ Nobody else has done it this particular way before.
 Design an algorithm to detect laughter as best it can.
 
 From this, can we learn anything about the structure of laughter from what our algorithm decides on?
+
+Can we learn anything interesting about sequence detection with neural networks?
 
 \section{Background}
 
@@ -255,10 +262,7 @@ The entire dataset used for training the model in this report was only classifie
 
 % Conclude. Another brief summary of everything I have done, and close.
 
-\renewcommand{\section}[2]{}
-\begin{thebibliography}{99}
-	\addcontentsline{toc}{section}{Bibliography}
-	
-\end{thebibliography}
+\bibliography{report}
+\bibliographystyle{IEEEtran}
 
 \end{document}
