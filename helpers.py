@@ -511,7 +511,7 @@ def demo_imput_pipeline():
     """ Makes only one handle, to quickly classify demo audio.
 
     """
-    
+
     pass
 
 ################################################################################
@@ -875,7 +875,7 @@ def ltsm_model(data_input, num_features, num_classes, n_hidden=128):
 
 def cost_function(label, prediction, cost_type='entropy'):
 
-    weighted_labels = tf.multiply(label, tf.constant([1, 27], dtype=tf.int32), name='add_weight_to_labels')
+    weighted_labels = tf.multiply(label, tf.constant([1, 30], dtype=tf.int32), name='add_weight_to_labels')
 
     if (cost_type == 'entropy'):
         cost = tf.reduce_sum(tf.nn.softmax_cross_entropy_with_logits(

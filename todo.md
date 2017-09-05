@@ -89,7 +89,7 @@
 * Different Hyper Params														**DONE**
 * File by file mfcc normalization on the input.									**DONE**
 	* Make some pretty histograms showing the average values to visualize it.	**DONE**
-	* How about batch normalization?
+	* How about batch normalization?											**DONE**
 		* Determine the reason for large lengths of missclassified data?
 	* How about only removing the mean, not changing the stddev?
 * Make google Listen to some of the laughter from my audio sample.
@@ -99,7 +99,7 @@
 * Implement RELU dropout														**DONE**
 * Implement nested cross-validation
 * Investigate tf.app.flags as a potential hyperparam parsing technique.			**DONE** - It's actually not that good.
-* Restructure folders to include more actual project things inside this repo.
+* Restructure folders to include more actual project things inside this repo.	**DONE**
 * Start writing report and maybe also include that in this repo.				**DONE**
 * Make the laughter plotter function take batch_size into account.				**DONE**
 * Move the cost function to helpers to clean things up.							**DONE**
@@ -118,7 +118,9 @@
 * Try out the tanh activation function.											**DONE**
 * Increase feature number.
 * Reshape average node weights and save as an image of weights over time.		**DONE**
+	* Also view the variances													**DONE**
 * Move all dataset sequencing to one dataset creation function					**DONE**
 	* Include shuffling															**KINDA DONE**
 	* Include batch normalization												**DONE**
 * For demo, be able to quickly give a custom audio classification
+* Visualize parameter sweeps

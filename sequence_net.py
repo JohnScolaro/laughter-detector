@@ -14,17 +14,17 @@ if len(sys.argv) < 2:
     name = "sequence_mlp_test"
 
     # Hyper Parameters
-    learning_rate = 0.001 #0.001 #0.00006
+    learning_rate = 0.000004 #0.001 #0.00006
     beta1 = 0.7 #0.9
     beta2 = 0.9 #0.999
     epsilon = 1e-08 #1e-08
 
     # Network Params
-    training_epochs = 5
-    display_step = 50
-    batch_size = 500 #5000
+    training_epochs = 10
+    display_step = 200
+    batch_size = 200 #5000
     train_test_ratio = 0.85
-    activation_function = 'relu'
+    activation_function = 'tanh'
     layers = [400]
     output_layer_biases = True
     n_input = 20 # Data input features

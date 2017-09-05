@@ -88,7 +88,7 @@ Laughter is often a loud and repetitive sound, and similarly to speech, easily d
 \\
 At the University of Queensland, this project is of interest to two different research groups. The linguistics department who hopes to learn more about the general structure of laughter and different types of laughter, and the Complex \& Intelligent Systems Research Division, which is both interested in laughter and it's detection for interaction with humans, and the neural networks behind its detection.
 
-Curiousity
+Curiosity
 
 Laughter classification is potentially useful for a large number of reasons.
 
@@ -117,6 +117,8 @@ Neural networks and the like for things similar to this.
 % How I've gone about my work. So this is the major heading talking about what I've done to attempt to detect laughter.
 % I am unsure about whether to actually put any writing about anything in this section, or just put it all into the subsections.
 
+When this project was started, there was no dataset or prior work on this topic, so everything from dataset procuring to network design was created for this project. This section details all the steps that were taken for each fundamental part of this project.
+
 \subsection{Dataset}
 
 % Starting with all my working into the dataset.
@@ -136,11 +138,11 @@ The dataset used for this project was a collection of recorded spontaneous speec
 \\
 This corpus is smaller than the datasets used in other studies, which have used hundreds of hours of audio from recorded meetings, or telephone calls. It is well known that machine learning techniques improve where there is more data, and with only fifteen hours of audio, our results will be limited. The laughter in the audio used in this study is very diverse, with many different types of laughs. There are long belly laughs from old friends, and very short polite laughs from a child addressing their parents. There are laughs from people with thick accents, and laughs emitted which trying to talk. The diversity of the dataset used is an advantage, as any patterns learnt should be to the nature of laughter 'in-general' and not overgeneralise to a specific type of laughter, or the laughter of one person.\\
 \\
-All audio files are purely recordings of human speech, and do not contain noises from other sources. Other laughter classifiers [INSERT REFERENCE HERE] have trained systems to detect laughter by using a myriad of different sounds to train it. (Insert examples here when you find the reference) Detecting the difference between laughter and human speech will be more difficult, but potentially more useful as laughter is often interwoven between snippets of human speech, and not between the sounds of trains, popping bubbles, and waterfalls.
+All audio files are purely recordings of human speech, and do not contain noises from other sources. Other laughter classifiers [INSERT REFERENCE HERE] have trained systems to detect laughter by using a myriad of different sounds to train on. [INSERT REFERENCE HERE] Detecting the difference between laughter and human speech will be more difficult, but potentially more useful as laughter is often interwoven between snippets of human speech, and not between the sounds of trains, popping bubbles, and waterfalls.
 
 \subsubsection{Classification}
 
-Prior to this study, the audio from the Australian National Corpus had never been used for laughter detection, and the data labels didn't exist. Past research into laughter detection used the laughter labels that meeting transcribers had attached to the transcriptions of meetings. [INSERT REFERENCE HERE] and researchers had fiddled with portions of the data themselves because they found the data labels inaccurate. [FIND REFERENCE HERE AND MAYBE QUOTE]. However, with hundreds of hours of audio, sifting through it all manually to select the laughter would be infeasible. In this study, the audio was listened to, and the laughter segments were manually selected down to the millisecond.\\
+Prior to this study, the audio from the Australian National Corpus had never been used for laughter detection, and the data labels did not exist. Past research into laughter detection used the laughter labels that meeting transcribers had attached to the transcriptions of meetings. [INSERT REFERENCE HERE] and researchers had fiddled with portions of the data themselves because they found the data labels inaccurate. [FIND REFERENCE HERE AND MAYBE QUOTE]. However, with hundreds of hours of audio, sifting through it all manually to select the laughter would be infeasible. In this study, the audio was listened to, and the laughter segments were manually selected down to the millisecond.\\
 \\
 The method used to classify the laughter, was to use ELAN [REFERENCE], an audio-visual transcription software, to select the sections of audio which contain laughter. ELAN outputs this data in an XML format, which is parsed into a list of times when laughter starts, and then subsequently stops. These lists of start and stop times are used when creating the dataset, and the label (in one-hot encoded form) is appended to the vector of audio features.\\
 \\ 
@@ -189,24 +191,115 @@ The entire dataset used for training the model in this report was only classifie
 \subsection{Preprocessing}
 
 % Noise removal and rough volume normalisation.
+% White noise removal from redacted segments.
 % mfcc extraction.
+	% Also talk about delta's and delta-delta's.
 % The per-file normalisation of MFCC values.
 % The data storage method for speed and size.
+
+There are many different transformations that the original 44kHz wave audio files must undergo before they are suitable to be used as input data for a TensorFlow model. These transformations can be separated into two parts: the preprocessing, and the TensorFlow input pipeline. Pre-processing takes place prior to any other stage, and consists of transforming the audio files into streams of features which are quickly and easily read by TensorFlow. These streams are then further transformed by TensorFlow at training-time into their final form before being used to update node weights. This latter section will be talked about in Section \ref{section:input_pipeline}. There are a few different procedures undertaken in the pre-processing stage, and this part of the pipeline is visualised in Figure \ref{preprocessing_pipeline}.
+
+\begin{figure}[H]
+	\centering
+	\vspace{0.5cm}
+	\includegraphics[scale = 0.17]{diagrams/preprocessing.png}
+	\caption{The preprocessing pipeline.}
+	\label{preprocessing_pipeline}
+\end{figure}
+
+\subsubsection{Volume Normalisation and Noise Removal}
+
+Most audio files in the dataset were recorded at different times, on different recording devices and in different locations. In machine learning, it is important to attempt to normalise all the data, and attempt to make it as similar as possible, so the neural network can attempt to learn the subtle differences between what is and isn't laughter, and not let it be affected by the differences in recording equipment or location. Audacity was used for all preprocessing tasks.
+
+\begin{figure}[H]
+	\centering
+	\vspace{0.5cm}
+	\includegraphics[scale = 0.5]{figs/origional_waveforms.png}
+	\caption{The waveforms of two difference audio files before preprocessing. The top recording is in stereo, and much softer than the bottom recording. These are the differences preprocessing attempts to remove.}
+	\label{before_preprocessing}
+\end{figure}
+
+The volume of each audio file should be roughly equal, because a louder file will produce larger features. This will reduce the ability for the network to determine the actual volume of the audio in the file. The `Amplify' function in Audacity was used to boost the volume of quiet files until they were roughly the same volume. This is not a precise method of normalizing the volume between different files, but the majority of this volume normalisation will be taken care of in the file-by-file feature normalization later, so it isn't important that this volume normalization is incredibly precise, only that each file sounds roughly the same.\\
+\\
+Next, due to the nature of this dataset, several audio files were recorded in noisy environments and had large amounts of noise distorting the audio. In this section `noise' refers to the repetitive drone of machines, electronic sinusoidal noise, and artefacts of the recording device. These types of noise are largely sinusoidal, and overlay the audio throughout the entire clip. Due to the repetitive nature of this noise, it is effectively filtered out by Audacity's `Noise Reduction' filter.\footnote{For more information on the specifics of this function, an explanation of how the algorithm works can be found here: \url{http://wiki.audacityteam.org/wiki/How_Audacity_Noise_Reduction_Works#algorithm}} This filter takes a sample of a section of the original audio file which contains only noise and no additional sounds. It takes the Fourier Transform to create a noise profile, and specifically attenuates these frequencies. This method was used to reduce the amount of noise in the original audio files, as constant sound at a certain frequency will distort to values of the features extracted from the audio.\\
+\\
+Lastly, the original dataset audio contained sensitive information about many locations and people who were the subject of conversation. Any names or locations have been removed from the dataset, however they have been replaced by a harsh white-noise sound. Just as other distortions will, these segments of white noise will also reduce the accuracy of the laughter detector.  Audacity was used to remove as many of these segments as possible.
+
+\subsubsection{Feature Extraction and Normalisation}
+
+After roughly normalizing the volume and removing noise, features need to be extracted from the audio waveform. This is a technique common to almost all speech recognition systems, and is of fundamental importance. From the book: ``Fundamentals of Speech Recognition'', it is said that: ``... perhaps the greatest common denominator of all recognition systems is the signal-processing front end, which converts the speech waveform to some type of parametric representation (generally as a considerable lower information rate) for further analysis and processing.''\cite{rabiner1993fundamentals} The book goes on to dedicate an entire chapter to discussing and comparing the various different methods of signal processing used to extract series of features for the data input to a speech recognition system. As alluded to in that quote, this is especially important as it reduces the rate of information needed to be processed by the neural network. In another publication by world leading researchers: ``This non-adaptive but highly engineered preprocessing of the waveform is designed to discard the large amount of information in waveforms that is considered to be irrelevant for discrimination and to express the remaining information in a form that facilitates discrimination...''.\cite{hinton2012deep} For example: over a single second of audio, lets assume that a handful of syllables are pronounced by the speaker. All information in the time series waveform is not necessarily needed to understand which syllables were said. Rather than the 44000 floats used to describe the waveform over one second, signal processing techniques can be used to extract the amounts of different frequency sounds from the audio. This 44000 floats/second waveform can be reduced to roughly 1000 floats/second of extracted features. This is greater than an order of magnitude size reduction, while only losing a fraction of the audio information. This allows researchers to train networks on much larger datasets, for much longer than would be possible if the entire waveform were to be used.\\
+\\
+While there are many different feature extraction methods, the features used for laughter detection were chosen to be Mel Frequency Cepstral Coefficients (MFCC's). MFCC's are essentially filter banks, measuring the intensity of audio at different frequencies. The frequency bins are scaled to immitate the ranges of audio humans hear at, and the intensity is logarithmically scaled to further imitate the scale of the human ear. MFCC's were chosen because they have been used recently in a number of leading speech recognition systems.\cite{mozilladeepspeech} The number of MFCC features to generate is variable, and is generally between 12 and 26. 20 MFCC features were used in this system.\\
+% There is definately much more you can write on MFCC's here.
+	% Why did you choose MFCC's?
+	% How exactly do MFCC's work?
+	% Frame size and stride.
+		% Plus picture
+	% Delta's and delta deltas
+\\
+Another feature commonly included in neural networks learning from MFCC's are their deltas and delta deltas. Training a network on MFCC's allows it to attempt to make a classification based on a snapshot of time. Deltas are the first derivative of the MFCC features, and delta deltas are the second derivative. Appending these features to the original MFCC features gives the network more information about the way the MFCC's will change in the future. Giving the network more features to train on may result in higher quality discrimination.\\
+	% Additional features
+	% Spanning features for non-sequential networks.
+	% Clip number, feature number, labels
+\\
+In addition to the features listed above, the file number, stride number, and laughter labels were appended to the list of features. The laughter labels are used for training in the training set, and purely for plotting against and evaluating accuracy in the test set. Here, the sequence number refers to the nth set of features of the file. The first set of features is number 1, and the next is 2 and so on. This, along with the clip number, is used in the test set so when plotting the probability of the output being laughter, the clip and time in that clip when the laughter occurred can be found. This is helpful in evaluating which sounds trigger the network to recognise laughter.\\
+\\
+Next, each feature is normalized on a file-by-file basis. After the MFCC's for an entire file have been generated, the features are normalized accordingly by subtracting the mean of that particular feature, and then dividing by the standard deviation.
+\begin{equation}
+	x\prime = \frac{x - \bar{x}}{\sigma^2}
+\end{equation}
+Perhaps the following pseudo-code can help convey what has been done.
+\begin{lstlisting}
+for each 20ms frame of audio
+    generate 20 MFCC's
+end
+save 2D value as array. Size = [number of 20ms segments, 20]
+
+for x in 1 to 20:
+    a[:,x] = (a[:,x] - mean(a[:,x])) / stddev(a[:,x])
+end
+
+// Repeat this for each file
+\end{lstlisting}
+This normalization further helps remove any biases, differences in volume between files, and also centres the values around zero. This is an important property of the input data for any neural network.\cite{lecun2012efficient}
+
+\subsubsection{tfRecord Conversion}\label{section:tfRecord_conversion}
+
+TensorFlow is used in this report to create and train the neural networks to classify laughter. TensorFlow provides a simple Python API to allow the creation of many types of neural networks with relative ease. A much more in depth discussion on TensorFlow and how it is specifically used to read data and train networks will take place in Section \ref{section:Tensorflow}, but this one important part of preprocessing occurs separate to the whole TensorFlow pipeline, and is crucial to running an efficient training pipeline.\\
+\\
+At this point in the pre-processing pipeline, data is saved in a two dimensional array of size: [number of frames, number of features]. A primitive method of saving this array for use by TensorFlow would be to use a comma separated variable file (CSV). This saves all numbers and variables as UTF16 variables. This is human-readable and neat, but very computationally inefficient. To read any single set of features from the table, the entire line must be parsed by a CSV reader, stacked into a Tensor, and parsed to the next stage of the input pipeline. This is orders of magnitude slower than reading a binary file, and if more complex reading is needed, column by column for example, CSV files become even more inefficient. Google recognised this when creating TensorFlow and created a custom binary data type called tfRecords which can be used for data storage.\\
+\\
+TfRecords have the ability to store many different data types in the same file as a sequence of binary strings. It is similar to HDF5 (Hierarchical Data Format) which is designed to store and organise large amounts of data efficiently, but with a few extra features built in. TfRecords contain sets of key-value `features' where the key, (a string) maps to binary data which can be many different data types. Reading this data is fast, and the hierarchical format leads itself to being organised into Tensors quickly and efficiently.\\
+\\
+Consequently, the final stage of the preprocessing pipeline is to convert every audio file's set of features into a tfRecord file for fast accessing by TensorFlow. Adding this step increased the training speed of the network by an order of magnitude and simultaneously reduced the file size by $\sim$20\%.
 
 \subsection{Initial Analysis}
 
 % This is performing PCA and t-SNE on the origional data and features.
 	% Show that the data doesn't really appear to be especially seperable.
+% Matlab Neural networks.
 
-\subsection{TensorFlow}
+\subsection{TensorFlow}\label{section:Tensorflow}
 
-% What tensorflow is, and why I chose to use it over something like MATLAB. Maybe also talk about my MATLAB results too.
+% What tensorflow is, and why I chose to use it over something like MATLAB.
 
-\subsubsection{Input Pipeline}
+TensorFlow is an open source software library which allows programmers to implement complex machine learning algorithms with relative ease. TensorFlow contains functions to perform efficient n-dimensional matrix (tensor) manipulating and calculation, by building a graph of mathematical functions which the tensors `flow' between. By generalizing these operations to nodes of the graph, general gradient calculation for back propagation through neural networks can be done with a single function, allowing any confident programmer to fiddle with these networks and use them to train intelligent systems on almost anything. It also supports many other complex features such as: deployment on mobile devices, GPU acceleration, and scalable distributed training and testing across multi CPU/GPU systems. Since it is open source, it also features complex and state of the art systems contributed by leading researchers in their fields\\
+\\
+TensorFlow was chosen as the program to be used in this project, over other competing programs such as MATLAB's neural network toolbox, scikit-learn, Caffe, and many others, because of its lower level implementation and the finer control it provides. In addition to this, it is open source, has copious documentation, and will allow the quick and effortless prototyping of many different types of neural networks with different parameters. TensorFlow is also packaged with TensorBoard, a network visualisation tool, allowing the network architect to visualise the network's node weights, accuracy, cost, and any other feature instantly and effortlessly.
+
+\subsubsection{Input Pipeline}\label{section:input_pipeline}
 
 % Talk about the many different input pipelines I've tried but mainly:
 	% The frame by frame batches
 	% The sequences of frames batches.
+
+\begin{figure}[H]
+	\centering
+	\vspace{0.5cm}
+	\includegraphics[scale = 0.5]{diagrams/origional_waveforms.png}
+	\caption{The waveforms of two difference audio files before preprocessing. The top recording is in stereo, and much softer than the bottom recording. These are the differences preprocessing attempts to remove.}
+	\label{before_preprocessing}
+\end{figure}
 
 \subsubsection{Models}
 

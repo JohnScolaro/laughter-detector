@@ -29,3 +29,5 @@ origional_audio/
 *.bbl
 *.blg
 *.bak
+report/figs/
+report/diagrams/

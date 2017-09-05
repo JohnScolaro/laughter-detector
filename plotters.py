@@ -79,7 +79,13 @@ def laughter_plotter(prediction, label, clip, sequence, path, number, time_step,
     blue_patch = mpatches.Patch(color='blue', label='Probability of Laughter')
     black_patch = mpatches.Patch(color='black', label='Data Labels')
     plt.legend(handles=[black_patch, blue_patch], loc=1)
-    plt.axis([0, 10, -0.1, 1.2])
+
+    # If using really small batches, rescale the axis
+    if batch_size < 500:
+        x_axis_length = batch_size * 0.02
+        plt.axis([0, x_axis_length, -0.1, 1.2])
+    else:
+        plt.axis([0, 10, -0.1, 1.2])
 
     # If the sound folder doesn't exist, make it.
     path = os.path.join(path, 'sound')
