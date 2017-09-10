@@ -98,19 +98,29 @@ Nobody else has done it this particular way before.
 
 % What it is that I'm trying to do
 
-Design an algorithm to detect laughter as best it can.
-
-From this, can we learn anything about the structure of laughter from what our algorithm decides on?
-
-Can we learn anything interesting about sequence detection with neural networks?
+The aim of this thesis is to design a neural network to detect laughter as accurately as possible. Through designing and testing many different neural network architectures some intuition can be gained as to how the node weights change to detect laughter. Different audio features may be of different importance, and the change in features' weights over time may also give information about the average laughter sound. In essence, one main goal is to derive some intuition about fundamental differences between laughter and speech, which allow the network to discriminate between them.\\
+\\
+Another goal of this study is to replicate similar\cite{gosztolya2016laughter} recent works on laughter detection, and potentially extend upon them. These recent works use deep neural networks to classify laughter, which can be implemented in TensorFlow. More recently LSTM networks have achieved more accurate results on problems with sequential data, like human speech.\cite{hannun2014deep,mozilladeepspeech} TensorFlow provides high level tools to create an LSTM network which may allow for this to be investigated within the time-frame of this thesis.
 
 \section{Background}
 
 % An in depth look into the state of the field of study so far
 
-Datasets and preprocessing.
+\subsection{Dataset}
 
-Neural networks and the like for things similar to this.
+\subsection{Preprocessing}
+
+% There is definately much more you can write on MFCC's here.
+	% Why did you choose MFCC's?
+	% How exactly do MFCC's work?
+		% Plus pictures.
+	% Frame size and stride.
+		% Plus picture.
+	% Delta's and delta deltas
+
+\subsection{Machine Learning Techniques}
+
+\subsection{Previous Laughter Detection Attempts}
 
 \section{Methodology}
 
@@ -230,19 +240,13 @@ Lastly, the original dataset audio contained sensitive information about many lo
 After roughly normalizing the volume and removing noise, features need to be extracted from the audio waveform. This is a technique common to almost all speech recognition systems, and is of fundamental importance. From the book: ``Fundamentals of Speech Recognition'', it is said that: ``... perhaps the greatest common denominator of all recognition systems is the signal-processing front end, which converts the speech waveform to some type of parametric representation (generally as a considerable lower information rate) for further analysis and processing.''\cite{rabiner1993fundamentals} The book goes on to dedicate an entire chapter to discussing and comparing the various different methods of signal processing used to extract series of features for the data input to a speech recognition system. As alluded to in that quote, this is especially important as it reduces the rate of information needed to be processed by the neural network. In another publication by world leading researchers: ``This non-adaptive but highly engineered preprocessing of the waveform is designed to discard the large amount of information in waveforms that is considered to be irrelevant for discrimination and to express the remaining information in a form that facilitates discrimination...''.\cite{hinton2012deep} For example: over a single second of audio, lets assume that a handful of syllables are pronounced by the speaker. All information in the time series waveform is not necessarily needed to understand which syllables were said. Rather than the 44000 floats used to describe the waveform over one second, signal processing techniques can be used to extract the amounts of different frequency sounds from the audio. This 44000 floats/second waveform can be reduced to roughly 1000 floats/second of extracted features. This is greater than an order of magnitude size reduction, while only losing a fraction of the audio information. This allows researchers to train networks on much larger datasets, for much longer than would be possible if the entire waveform were to be used.\\
 \\
 While there are many different feature extraction methods, the features used for laughter detection were chosen to be Mel Frequency Cepstral Coefficients (MFCC's). MFCC's are essentially filter banks, measuring the intensity of audio at different frequencies. The frequency bins are scaled to immitate the ranges of audio humans hear at, and the intensity is logarithmically scaled to further imitate the scale of the human ear. MFCC's were chosen because they have been used recently in a number of leading speech recognition systems.\cite{mozilladeepspeech} The number of MFCC features to generate is variable, and is generally between 12 and 26. 20 MFCC features were used in this system.\\
-% There is definately much more you can write on MFCC's here.
-	% Why did you choose MFCC's?
-	% How exactly do MFCC's work?
-	% Frame size and stride.
-		% Plus picture
-	% Delta's and delta deltas
 \\
 Another feature commonly included in neural networks learning from MFCC's are their deltas and delta deltas. Training a network on MFCC's allows it to attempt to make a classification based on a snapshot of time. Deltas are the first derivative of the MFCC features, and delta deltas are the second derivative. Appending these features to the original MFCC features gives the network more information about the way the MFCC's will change in the future. Giving the network more features to train on may result in higher quality discrimination.\\
 	% Additional features
 	% Spanning features for non-sequential networks.
 	% Clip number, feature number, labels
 \\
-In addition to the features listed above, the file number, stride number, and laughter labels were appended to the list of features. The laughter labels are used for training in the training set, and purely for plotting against and evaluating accuracy in the test set. Here, the sequence number refers to the nth set of features of the file. The first set of features is number 1, and the next is 2 and so on. This, along with the clip number, is used in the test set so when plotting the probability of the output being laughter, the clip and time in that clip when the laughter occurred can be found. This is helpful in evaluating which sounds trigger the network to recognise laughter.\\
+In addition to the features listed above, the file number, sequence number, and laughter labels were appended to the list of features. The laughter labels are a one-hot encoded vector for the two different classifications: laughter, and not laughter. They are used for training in the training set, and purely for plotting against and evaluating accuracy in the test set. The sequence number refers to the nth set of features of the file. The first set of features is number 1 and is generated from the audio starting at 0.00s, and ending at 0.02 seconds. The next sequence is 2 and so on. The clip number is a unique number identifying the specific file the audio sample came from. These last two numbers, the clip and sequence number, are used in the test set when plotting the probability of the output. The clip and time in the clip when laughter occurred can be generated. This is helpful in evaluating which sounds trigger the network to recognise laughter.\\
 \\
 Next, each feature is normalized on a file-by-file basis. After the MFCC's for an entire file have been generated, the features are normalized accordingly by subtracting the mean of that particular feature, and then dividing by the standard deviation.
 \begin{equation}
@@ -275,9 +279,35 @@ Consequently, the final stage of the preprocessing pipeline is to convert every 
 
 \subsection{Initial Analysis}
 
+Before taking the large laughter database straight to TensorFlow, it is useful to attempt to visualise differences in our features before trying anything more complex. For example, if we can show that laughter is easily separable just by observing feature values, why bother going to all the trouble using neural networks if this problem can be solved another way. In reality, it is expected that there will be no simple way to discriminate between laughter and non-laughter, because if there way, problems like speech detection would have been solved a long time ago. It is still useful however, as it will give a `feel' for the data, which may help when building a more complex network.\\
+\\
+Simply looking at the audio waveform for examples of audio and laughter is a good place to start.
+
+\begin{figure}[H]
+	\centering
+	\vspace{0.5cm}
+	\includegraphics[scale = 0.4]{figs/time-series2.png}
+	\caption{The time series waveform of an audio sample containing both laughter and speech.}
+	\label{time-series2}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\vspace{0.5cm}
+	\includegraphics[scale = 0.462]{figs/spectrum2.png}
+	\caption{A spectrogram visualisation of the same waveform shown in Figure \ref{time-series2}.}
+	\label{spectrum2}
+\end{figure}
+
+The waveforms shown in Figure \ref{time-series2} and Figure \ref{spectrum2} both show the waveforms of laughter and speech in different ways. There are differences between them visually in both representations, but there are no defining features of either one. In the time series waveform, the laughter appears to be louder than surrounding speech, and in the spectrogram visualisation, the finer harmonic details in speech appear to be lost, or at least much more complicated in laughter. Either way, this audio sample is interesting and shows some differences, however the dramatic differences in laughter can actually sound like make this a significantly harder problem. Laughter is not always louder than speech however, so creating a system that purely recognises volume would miss classify loud speech and soft laughter.
+
 % This is performing PCA and t-SNE on the origional data and features.
+A good starting point is to plot the normalised features over time, showing any significant differences between laughter and speech.
+
 	% Show that the data doesn't really appear to be especially seperable.
+
 % Matlab Neural networks.
+
 
 \subsection{TensorFlow}\label{section:Tensorflow}
 
@@ -296,7 +326,7 @@ TensorFlow was chosen as the program to be used in this project, over other comp
 \begin{figure}[H]
 	\centering
 	\vspace{0.5cm}
-	\includegraphics[scale = 0.5]{diagrams/origional_waveforms.png}
+	\includegraphics[scale = 0.5]{figs/origional_waveforms.png}
 	\caption{The waveforms of two difference audio files before preprocessing. The top recording is in stereo, and much softer than the bottom recording. These are the differences preprocessing attempts to remove.}
 	\label{before_preprocessing}
 \end{figure}
