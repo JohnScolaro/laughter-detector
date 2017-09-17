@@ -17,8 +17,8 @@ def main():
     array = np.genfromtxt(directory, delimiter=',')
 
     # Plot array
-    plot(np.transpose(array), save_path1, cm="jet")
-    plot(np.transpose(array), save_path2, cm="Greys")
+    plot(np.flip(np.transpose(array), axis=0), save_path1, cm="jet")
+    plot(np.flip(np.transpose(array), axis=0), save_path2, cm="Greys")
 
 
 def plot(array, save_path, cm="jet"):
@@ -31,7 +31,7 @@ def plot(array, save_path, cm="jet"):
     plt.xlabel("Samples")
     plt.ylabel("Feature Number")
     plt.xticks(np.arange(0, 330, 50))
-    plt.yticks(np.arange(20), np.arange(1, 21))
+    plt.yticks(np.arange(20), np.flip(np.arange(1, 21), axis=0))
     ax = fig.add_subplot(111)
     ax.set_aspect(10)
     if cm == "jet":
@@ -40,9 +40,6 @@ def plot(array, save_path, cm="jet"):
     else:
         res = ax.imshow(np.array(conf_arr), cmap=plt.cm.Greys,
                 interpolation='nearest', aspect="auto")
-
-    width = 20
-    height = 100
 
     cb = fig.colorbar(res)
 

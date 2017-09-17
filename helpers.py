@@ -507,12 +507,33 @@ def _sequence_gen(window_length, num_classes, batch_size, num_features, data,
 
     return (windowed_data, windowed_clip, windowed_sequence, windowed_labels)
 
-def demo_imput_pipeline():
-    """ Makes only one handle, to quickly classify demo audio.
+def input_pipeline3_demo(filename_list, window_length, num_classes, batch_size,
+        num_features, batch_normalize=False):
+    """ Constructs an input pipeline for the demo file.
 
+    Basically exactly the same as input pipeline, however it only creates one
+    iterator because test data is all we need.
     """
 
-    pass
+    # Define a `tf.contrib.data.Dataset` for iterating over one epoch of the data.
+    test_dataset = tf.contrib.data.TFRecordDataset(filename_list)
+    test_dataset = test_dataset.batch(batch_size)
+    test_dataset = test_dataset.map(_parse_function)
+    test_dataset = test_dataset.filter(lambda a, b, c, d: tf.equal(tf.shape(a)[0], batch_size))
+
+    # Optional batch normalization.
+    if batch_normalize == True:
+        test_dataset = test_dataset.map(_batch_norm)
+
+    # Transform datasets into sequences.
+    test_dataset = test_dataset.map(functools.partial(_sequence_gen,
+            window_length, num_classes, batch_size, num_features))
+
+    # Return an *initializable* iterator over the dataset, which will allow us
+    # to re-initialize it at the beginning of each epoch.
+    test_iter = test_dataset.make_initializable_iterator()
+
+    return test_iter
 
 ################################################################################
 # Models
@@ -839,6 +860,105 @@ def sequence_mlp(x_train, x_test, n_features, window_length, n_outputs,
 
     return cur_layer_train, cur_layer_test, weights, biases
 
+def sequence_mlp_demo(x_test, n_features, window_length, n_outputs,
+        batch_size, hidden_layers, activation_function='relu',
+        output_layer_biases=True, clipped=False):
+    """ Creates the MLP structure for the demonstration.
+
+    Does the same thing as the sequence_mlp file, however it creates only one
+    data path, were the demo data flows through. No training is done. Also, it
+    initializes the values of the MLP to the saved values of a specified
+    training run.
+    """
+
+    # Clipping max
+    lim = 10
+    keep_prob = 0.2
+
+    # Store layers weight & biases in dictionaries
+    weights = {}
+    biases = {}
+
+    # Select the appropriate activation function
+    if activation_function == 'sigmoid':
+        a = lambda x: tf.sigmoid(x)
+    elif activation_function == 'relu':
+        a = lambda x: tf.nn.relu(x)
+    elif activation_function == 'tanh':
+        a = lambda x: tf.tanh(x)
+    else:
+        a = lambda x: tf.nn.relu(x)
+
+    if clipped == True:
+        b = lambda x: tf.minimum(a(x), lim)
+    else:
+        b = a
+
+    op = c
+
+    # Add the first layer to the dictionary
+    cur_layer_num = 1
+    with tf.variable_scope("Layer1"):
+        weights['w' + str(cur_layer_num)] = tf.Variable(tf.random_normal([n_features * window_length,
+                hidden_layers[0]], mean=w_mean, stddev=w_std), name=("Layer_" +
+                str(cur_layer_num) + "_Weights"))
+        biases['b' + str(cur_layer_num)] = tf.Variable(tf.random_normal(
+                [hidden_layers[0]], mean=b_mean, stddev=b_std), name=("Layer_" +
+                str(cur_layer_num) + "_Biases"))
+
+    # Add all but the last layers to the dictionary
+    cur_layer_num = 2
+    for layer in hidden_layers[1:]:
+        with tf.variable_scope("Layer" + str(cur_layer_num)):
+            weights['w' + str(cur_layer_num)] = tf.Variable(tf.random_normal(
+                    [hidden_layers[cur_layer_num - 2], layer], mean=w_mean,
+                    stddev=w_std), name=("Layer_" + str(cur_layer_num) +
+                    "_Weights"))
+            biases['b' + str(cur_layer_num)] = tf.Variable(tf.random_normal(
+                    [layer], mean=b_mean, stddev=b_std), name=("Layer_" +
+                    str(cur_layer_num) + "_Biases"))
+            cur_layer_num += 1
+
+    # Add the last layer to the dictionary
+    with tf.variable_scope("OutputLayer"):
+        weights['out'] = tf.Variable(tf.random_normal([hidden_layers[-1],
+                n_outputs], mean=w_mean, stddev=w_std), name="Output_Weights")
+        biases['out'] = tf.Variable(tf.random_normal([n_outputs], mean=b_mean,
+                stddev=b_std), name="Output_Biases")
+
+    # Set up the connections for the first layer
+    cur_layer_num = 1
+    cur_layer_train = tf.add(tf.matmul(tf.reshape(x_train, [batch_size -
+            window_length + 1, n_features * window_length]), weights['w1']),
+            biases['b1'])
+    cur_layer_train = op(cur_layer_train)
+    cur_layer_test = tf.add(tf.matmul(tf.reshape(x_test, [batch_size -
+            window_length + 1, n_features * window_length]), weights['w1']),
+            biases['b1'])
+    cur_layer_test = op(cur_layer_test)
+
+
+    # Set up the connections for the middle layers
+    cur_layer_num = 2
+    for layer in hidden_layers[1:]:
+        cur_layer_train = tf.add(tf.matmul(cur_layer_train, weights['w' +
+                str(cur_layer_num)]), biases['b' + str(cur_layer_num)])
+        cur_layer_train = op(cur_layer_train)
+        cur_layer_test = tf.add(tf.matmul(cur_layer_test, weights['w' +
+                str(cur_layer_num)]), biases['b' + str(cur_layer_num)])
+        cur_layer_test = op(cur_layer_test)
+        cur_layer_num += 1
+
+    # Set up the connections for the last layer
+    if output_layer_biases == True:
+        cur_layer_train = tf.add(tf.matmul(cur_layer_train, weights['out']), biases['out'])
+        cur_layer_test = tf.add(tf.matmul(cur_layer_test, weights['out']), biases['out'])
+    else:
+        cur_layer_train = tf.matmul(cur_layer_train, weights['out'])
+        cur_layer_test = tf.matmul(cur_layer_test, weights['out'])
+
+    return cur_layer_train, cur_layer_test, weights, biases
+
 def ltsm_model(data_input, num_features, num_classes, n_hidden=128):
     """ Creates an LTSM model to classify a sequence of audio data.
 
@@ -913,7 +1033,6 @@ def create_saver(layers, weights, biases):
     saver = tf.train.Saver(list_of_variables)
 
     return saver
-
 
 ################################################################################
 # Metrics
@@ -1324,7 +1443,6 @@ class Metrics(object):
                 return False
 
         return True
-
 
 class Logger(object):
     """Logging in tensorboard without tensorflow ops.

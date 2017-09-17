@@ -10,6 +10,7 @@ figs/
 # Not the whole processed dataset
 dataset/
 demo/audio_file/
+demo/output/
 
 # Not the modified dataset or laughter classifications
 modified_audio/*wav

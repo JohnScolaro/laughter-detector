@@ -86,13 +86,13 @@ Extracting information from audio has many uses, including speech recognition an
 \\
 Laughter is often a loud and repetitive sound, and similarly to speech, easily detectable by a human listener. However due to the complexity of the sound, it is difficult to precisely classify computationally. These types of problems are perfect for machine learning. Questions which can be answered by any human, but when asked how, it isn't really explainable. ``How can you tell there is a face in that picture?'' or ``What words are being said in this audio?'' are other examples. As a human, you just can. There is no simple mathematical expression you can write to distinguish exactly what is in a picture based on the pixels, but if you look at the picture, you can simply see what is there. There are many types of laughter, which can be categorized a number of ways. For example, a simple classifier separates laughter into voiced and unvoiced categories, where voiced laughter is louder and song like, while unvoiced laughter consists of grunts and snorts. Additionally, laughter is used differently in different scenarios to mean various things: from softer polite laughs, to louder more jovial laughs used amongst friends.\cite{tanaka2011acoustic} Laughter also changes in the company of people of different gender and nationality,\cite{campbell2007whom} and affects the opinions of people listening.\cite{bachorowski2001not} Accurate laughter detection has many practical applications. These applications include but are not limited to: the detection of humorous content, improvement of speech recognition software by recognising non-speech sounds, and facilitating more natural machine-human communication. Previous studies can be divided into those which attempt to detect laughter in audio, and those which attempt to classify the type of laughter. The best laughter detectors use standard speech recognition features and discriminating techniques\cite{cosentino2016quantitative}, with some of the best classifiers achieving ~10\% error.\cite{gosztolya2016laughter,knox2007automatic,truong2007automatic,truong2005automatic} Extending on laughter detection, laughter classification allows further unvoiced information to be extracted from audio about the type of laughter. Knowing whether laughter is uncomfortable or genuine can be used to improve machine-human interaction. Laughter classification has been shown to work successfully using Hidden Markov Models (HMM) on standard audio features\cite{tanaka2011acoustic}, however this research was only tested with a training set of ~150 laughter segments, so it is far from comprehensive.\\
 \\
-At the University of Queensland, this project is of interest to two different research groups. The linguistics department who hopes to learn more about the general structure of laughter and different types of laughter, and the Complex \& Intelligent Systems Research Division, which is both interested in laughter and it's detection for interaction with humans, and the neural networks behind its detection.
-
-Curiosity
-
-Laughter classification is potentially useful for a large number of reasons.
-
-Nobody else has done it this particular way before.
+At the University of Queensland, this project is of interest to two different research groups. The linguistics department who hopes to learn more about the general structure of laughter and different types of laughter, and the Complex \& Intelligent Systems Research Division, which is both interested in laughter and it's detection for interaction with humans, and the neural networks behind its detection.\\
+\\
++Curiosity\\
+\\
++Laughter classification is potentially useful for a large number of reasons.\\
+\\
++Nobody else has done it this particular way before.
 
 \subsection{Aim}
 
@@ -101,6 +101,8 @@ Nobody else has done it this particular way before.
 The aim of this thesis is to design a neural network to detect laughter as accurately as possible. Through designing and testing many different neural network architectures some intuition can be gained as to how the node weights change to detect laughter. Different audio features may be of different importance, and the change in features' weights over time may also give information about the average laughter sound. In essence, one main goal is to derive some intuition about fundamental differences between laughter and speech, which allow the network to discriminate between them.\\
 \\
 Another goal of this study is to replicate similar\cite{gosztolya2016laughter} recent works on laughter detection, and potentially extend upon them. These recent works use deep neural networks to classify laughter, which can be implemented in TensorFlow. More recently LSTM networks have achieved more accurate results on problems with sequential data, like human speech.\cite{hannun2014deep,mozilladeepspeech} TensorFlow provides high level tools to create an LSTM network which may allow for this to be investigated within the time-frame of this thesis.
+
+\newpage
 
 \section{Background}
 
@@ -299,12 +301,30 @@ Simply looking at the audio waveform for examples of audio and laughter is a goo
 	\label{spectrum2}
 \end{figure}
 
-The waveforms shown in Figure \ref{time-series2} and Figure \ref{spectrum2} both show the waveforms of laughter and speech in different ways. There are differences between them visually in both representations, but there are no defining features of either one. In the time series waveform, the laughter appears to be louder than surrounding speech, and in the spectrogram visualisation, the finer harmonic details in speech appear to be lost, or at least much more complicated in laughter. Either way, this audio sample is interesting and shows some differences, however the dramatic differences in laughter can actually sound like make this a significantly harder problem. Laughter is not always louder than speech however, so creating a system that purely recognises volume would miss classify loud speech and soft laughter.
+The waveforms shown in Figure \ref{time-series2} and Figure \ref{spectrum2} both show the waveforms of laughter and speech in different ways. There are differences between them visually in both representations, but there are no defining features of either one. In the time series waveform, the laughter appears to be louder than surrounding speech, and in the spectrogram visualisation, the finer harmonic details in speech appear to be lost, or at least much more complicated in laughter. Either way, this audio sample is interesting and shows some differences, however the dramatic differences in laughter can actually sound like make this a significantly harder problem. Laughter is not always louder than speech however, so creating a system that purely recognises volume would miss classify loud speech and soft laughter.\\
+\\
+These waveforms convey some different features, however any network trained on this dataset isn't trained on the full waveform data used to generate these pictures. All neural networks will be trained on normalised MFCC features. In order to visualize this, lets plot that same section of audio again, but this time look at the normalised MFCC features.
+
+\begin{figure}[H]
+	\centering
+	\vspace{0.5cm}
+	\includegraphics[scale = 0.8]{figs/features_visualisation_grey.png}
+	\caption{The same 6 seconds of audio as Figure \ref{time-series2}, and Figure \ref{spectrum2}, but in MFCC feature form.}
+	\label{mfcc-visualisation}
+\end{figure}
 
 % This is performing PCA and t-SNE on the origional data and features.
-A good starting point is to plot the normalised features over time, showing any significant differences between laughter and speech.
+Talk about t-SNE and PCA and whatever else here.
 
-	% Show that the data doesn't really appear to be especially seperable.
+\begin{figure}[H]
+	\centering
+	\vspace{0.5cm}
+	\includegraphics[scale = 0.5]{figs/tsne2.png}
+	\caption{t-SNE plot of a randomly selected set of frames of features from un-normalized MFCC's.}
+	\label{tsne1}
+\end{figure}
+
+% Show that the data doesn't really appear to be especially seperable.
 
 % Matlab Neural networks.
 
@@ -315,20 +335,21 @@ A good starting point is to plot the normalised features over time, showing any 
 
 TensorFlow is an open source software library which allows programmers to implement complex machine learning algorithms with relative ease. TensorFlow contains functions to perform efficient n-dimensional matrix (tensor) manipulating and calculation, by building a graph of mathematical functions which the tensors `flow' between. By generalizing these operations to nodes of the graph, general gradient calculation for back propagation through neural networks can be done with a single function, allowing any confident programmer to fiddle with these networks and use them to train intelligent systems on almost anything. It also supports many other complex features such as: deployment on mobile devices, GPU acceleration, and scalable distributed training and testing across multi CPU/GPU systems. Since it is open source, it also features complex and state of the art systems contributed by leading researchers in their fields\\
 \\
-TensorFlow was chosen as the program to be used in this project, over other competing programs such as MATLAB's neural network toolbox, scikit-learn, Caffe, and many others, because of its lower level implementation and the finer control it provides. In addition to this, it is open source, has copious documentation, and will allow the quick and effortless prototyping of many different types of neural networks with different parameters. TensorFlow is also packaged with TensorBoard, a network visualisation tool, allowing the network architect to visualise the network's node weights, accuracy, cost, and any other feature instantly and effortlessly.
+TensorFlow was chosen as the program to be used in this project, over other competing programs such as MATLAB's neural network toolbox, scikit-learn, Caffe, and many others, because of its lower level implementation and the finer control it provides. In addition to this, it is open source, has copious documentation, and will allow the quick and effortless prototyping of many different types of neural networks with different parameters. TensorFlow is also packaged with TensorBoard, a network visualisation tool, allowing the network architect to visualise the network's node weights, accuracy, cost, and any other feature instantly and effortlessly. Initially MATLAB's neural network toolbox was trialled, however it lacked the basic functionality to support datasets larger than the total amount of memory available to the system. This would have made training the laughter detector impossible, so the switch was made to TensorFlow immediately.
 
 \subsubsection{Input Pipeline}\label{section:input_pipeline}
 
 % Talk about the many different input pipelines I've tried but mainly:
 	% The frame by frame batches
 	% The sequences of frames batches.
+	% Remember to insert pictures of the networks from tensorboard.
 
 \begin{figure}[H]
 	\centering
 	\vspace{0.5cm}
-	\includegraphics[scale = 0.5]{figs/origional_waveforms.png}
-	\caption{The waveforms of two difference audio files before preprocessing. The top recording is in stereo, and much softer than the bottom recording. These are the differences preprocessing attempts to remove.}
-	\label{before_preprocessing}
+	\includegraphics[scale = 0.15]{diagrams/sequence_generation.png}
+	\caption{A diagram showing a visual representation of the mapping used to generate sequences for a neural network expecting sequences. The original format on the left is two dimensional, with the different features along the x axis, and the different frames along the Y. This is transformed into the three dimensional tensor on the right, with features on the X axis, different sequences on the Y axis, and the frames which make the sequences on the Z axis.}
+	\label{sequence_generation_mapping}
 \end{figure}
 
 \subsubsection{Models}
@@ -372,6 +393,8 @@ TensorFlow was chosen as the program to be used in this project, over other comp
 	% The audio probability graphs
 	% The Confusion matrixes.
 
+\newpage
+
 \section{Results}
 
 % Talk about the metrics of the best network I made.
@@ -391,6 +414,8 @@ TensorFlow was chosen as the program to be used in this project, over other comp
 \section{Conclusion}
 
 % Conclude. Another brief summary of everything I have done, and close.
+
+\newpage
 
 \bibliography{report}
 \bibliographystyle{IEEEtran}
