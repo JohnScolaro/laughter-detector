@@ -100,7 +100,9 @@ At the University of Queensland, this project is of interest to two different re
 
 The aim of this thesis is to design a neural network to detect laughter as accurately as possible. Through designing and testing many different neural network architectures some intuition can be gained as to how the node weights change to detect laughter. Different audio features may be of different importance, and the change in features' weights over time may also give information about the average laughter sound. In essence, one main goal is to derive some intuition about fundamental differences between laughter and speech, which allow the network to discriminate between them.\\
 \\
-Another goal of this study is to replicate similar\cite{gosztolya2016laughter} recent works on laughter detection, and potentially extend upon them. These recent works use deep neural networks to classify laughter, which can be implemented in TensorFlow. More recently LSTM networks have achieved more accurate results on problems with sequential data, like human speech.\cite{hannun2014deep,mozilladeepspeech} TensorFlow provides high level tools to create an LSTM network which may allow for this to be investigated within the time-frame of this thesis.
+The neural network this study aims to create will classify sequences, rather than short clips of audio which is a slight difference to other research into laughter detection. [INSERT REFERENCE] The aim is to be able to process any arbitrary length audio sample or file, and the program will return the probability of the audio being laughter at every point of the file. This contrasts work by [INSERT REFERENCE] who created a system for discriminating between small sections of audio by determining if they contained laughter in them. If the rough start and end times of laughter can be determined in any audio file, that represents a much finer and more accurate laughter detection system.\\
+\\
+Another goal of this study is to replicate similar\cite{gosztolya2016laughter} recent works on laughter detection, and potentially extend upon them. These recent works use deep neural networks to classify laughter, which can be implemented in TensorFlow. More recently Long Short Term Memory (LSTM) networks have achieved more accurate results on problems with sequential data, like human speech.\cite{hannun2014deep,mozilladeepspeech} TensorFlow provides high level tools to create an LSTM network which may allow for this to be investigated within the time-frame of this thesis.
 
 \newpage
 
@@ -108,11 +110,79 @@ Another goal of this study is to replicate similar\cite{gosztolya2016laughter} r
 
 % An in depth look into the state of the field of study so far
 
-\subsection{Dataset}
+The study of laughter detection uses knowledge from a number of different fields. Laughter detection looks to studies in the field of linguistics for information about phonetics and how sounds like laughter and speech are generated. For the detection, recent advances in the fields of machine learning for speech recognition are used. All these niche fields draw on findings from fields such as: transcription, signal processing, sequence detection, neural networks and computer science. In this background section, a more detailed look with be taken into the outcomes of previous laughter detection studies, different signal processing and machine learning techniques, and other studies from areas influencing this report. 
+
+\subsection{Laughter}\label{subsection:laughter}
+
+% This section will talk about the study of laughter from a linguistics point of view. The phonetics, stats, emotions, other stuff like that.
+
+Laughter is a complex signal. There are many different ways to approach the issue of characterising laughter, and many different researchers have conducted research analysing laughter approaching it from many different directions. Laughter can be looked at from an emotional perspective, examining the way it makes the listened feel. It can be studied from a purely linguistic and biological perspective, analysing the mouth and throat movements responsible for creating it. Studies have been conducted examining how patients change their laughter depending on who they are talking to, or where they came from. Laughter can also be phonetically analysed in the same way as speech, categorising the different laughter `syllables' in the same way syllables in speech are categorised.\\
+\\
+% General laughter
+A rigorous study into laughter was conducted by Bachorowski in 2001\cite{bachorowski2001acoustic} on the acoustics of human laughter. Just over one thousand laughter segments were classified and analysed from recordings taken from willing students. The laughter was collected by recording ninty-seven students watch humorous clips from movies, and recording their responses. Laughter was analysed at `bout', `call', and `segment' levels. Here, bouts refer to an entire laughter episode occurring during a single exhalation, and although these frequently end with a sharp inhalation, this was not classified as part of the laughter. Calls refer to the individual `laughter-syllables' within the bout, and segments are sections within a call where a change in frequency occurs. Several large and interesting laughter statistics were noted from this study, such as laughter sex not affecting the number of laughs produced and females producing more song-like laughter bouts while males produced more unvoiced grunt-like laughs. It also collates the findings of seven other papers investigating laughter, and compares several laughter features (laughter stimulus, number of laugh bouts, calls per bout, bout duration, and more) all recorded by each of the papers and compares them to each other. This paper makes four conclusions, of which the first and most prominent is that ``Laughter is highly variable''. It seems depending on the subject, the method of obtaining laughter, and many other factors, the statistics gathered about the laughter seem to vary greatly. This paper breaks laughter into three different categories: song-like, grunt-like, and snort-like. Song-like laughs are more stereotypical laughs which would be described as `giggles' and `chuckles'. They consist of small, repetitive voiced sounds. Snort-like laughs were described as: ``Bouts largely comprised of unvoiced calls with perceptually salient nasal-cavity turbulence'', and grunt-like laughs as breathy pants caused by turbulence from either the laryngeal or oral cavities.\cite{bachorowski2001acoustic}\\
+\\
+% Classifications of laughter
+\subsubsection{Laughter Classification}
+On the subject of laughter classification, most papers separate laughter into a variable number of categories for the purpose of their investigation. As mentioned previously, Bachorowski identified three different laughter types, song-like, grunt-like, and snort-like. Different papers separate laughter into different categories, for example Hiroki Tanaka's paper: ``Acoustic Features of Four Types of Laughter in Natural Conversational Speech''.\cite{tanaka2011acoustic} Tanaka notes that previous research revealed that while ``Laugher played an important role in all dialogues but the laughs only occasionally resulted from deliberate humour; polite laughter and nervous social laughter accounted for more than half the number of laugh bouts''\cite{campbell2007changes}. In Tanaka's own study, laughter was classified into one of five different groups: mirthful, polite, embarrassment, derision, and other, separating laughter into classes by its social use, rather than it's formation. The paper then goes on to show the differences between each of these types of laughter.\\
+\\
+\begin{figure}[H]
+	\centering
+	\vspace{0.5cm}
+	\includegraphics[scale = 0.5]{figs/laugh_spectrogram_from_bachorowski.png}
+	\caption{Spectrogram visualisations of laughter from each of the tree different classifications in Bachorowski's paper. The difference in frequency structure of each laugh is easily seen, with harmonics in song-like laughter much more apparent.\cite{bachorowski2001acoustic}.}
+	\label{laughter_spectrogram_from_bachorowski}
+\end{figure}
+% Different situations when laughter is different.
+Laughter also changes when produced under different circumstances. In N. Campbell's paper: ``Whom we laugh with affects how we laugh''\cite{campbell2007whom} a neural network is created and training on a single persons laughter when talking to a range of different people. The network learns to discriminate (with an accuracy slightly below 50\%) between with whom the speaker is speaking purely by the difference in laughs they make, proving that there is some difference in laughter features in different situations. This paper focussed on the differences in laughter when talking to people of different gender and of different ethnicity.\\
+\\
+% Biological laughter production
+\subsubsection{Laughter Production}
+% Laughter averages, ie frequency, length, call number, all that.
+Laughter is a complex physical response, involving many different sections of the body. A number of studies look at the different bodily actions that occur during laughter. These responses can be seperated into five different areas:\cite{cosentino2016quantitative}
+\begin{itemize}
+\item Acoustics (The emitted sound)
+\item Respiration
+\item Phonation (The audio features, or shaping, of the emitted sound)
+\item Facial Expression
+\item Whole body movement
+\end{itemize}
+Recently a number of studies attempt to detect laughter by analysing a number of these different modes of expression simultaneously.\cite{petridis2008audiovisual,scherer2009multimodal} From an acoustical standpoint, laughter has several easily measurable features. These have been measured in many different studies, but averages for each of them have been found in a paper summarising hundreds of papers studying laughter written by S. Consentino\cite{cosentino2016quantitative}, and these are the numbers quoted below. A typical mirthful laugh contains four or five calls, and the average length of a call is about 220ms. Earlier calls tend to be louder than later ones, most likely due to a decreasing air supply. For both male and female laughter, the typical fundamental frequency is approximately 20\% higher pitch than in casual speech at ~278Hz for males, and ~480Hz for females. Voiced pulses may contain audio at a frequency higher than 16kHz, but most power is contained below 8kHz. The precise phonation of laughter has been measured precisely by using invasive intramuscular electromyogram signals.\footnote{These studies placed bands around the abdomen and chest of the patients and up to four small electrodes were injected into different laryngeal muscles. Despite having many electrodes embedded in their throats, the patients were all able to speak, swallow, and laugh comfortably.} Very complex analysis has been done on these detailed tests, revealing precisely how all the different muscles in the throat and neck move during laughter. Such descriptions are heavily biological, for example: ``During adduction, the thyroarytenoid and the cricothyroid muscles close the glottis, the arythenoids approach each other at a constant rate, and the vocal folds start vibrating while they are still not fully closed. Instead, during abduction, the posterior cricoarytenoid muscle is responsible for the opening, and the vocal folds are still vibrating when the abduction phase begins.''\cite{cosentino2016quantitative}\\
+\\
+While the precise movements of all the larynx and throat tissues isn't exactly required to develop a laughter detector, it is important to note the complexity of the structure of laughter, and the many different contributing factors which go into the creation of its sound. Analysis into the cause of differing laughter pitch alone is complex: ``Changes in the fundamental frequency F0 might be determined by multiple factors: the shortening of vocal tract length, due to lowering or lifting of the larynx, or to protraction or retraction of the lips, the tension and lengthening of vocal cords, and the variation of tracheal pressure which can, but not always, be temporally correlated with laryngeal adductors.''\cite{cosentino2016quantitative} It is this complexity to laughter which makes creating a laughter detector utilising purely phonetic theory such a hard task. Indeed, when talking about the different factors which make up laughter, Fry and Rader state: ``The interaction of these factors generates an almost infinite number of individually different laughs.''\cite{fry1977respiratory}
+
+\subsubsection{The Social Role of Laughter}
+% Laughter as it relates to social interaction.
+% Social standings and heirachy.
+Laughter is most often induced by something funny, and is a powerful conveyor of information. Laughter shows involvement in conversation and lets other people know that you have found something humerus. Besides this most common form of laughter, it can also be used to express other emotions such as stress and frustration. Another interesting observation is that people laugh more often when people around them are laughing. This is why laughter is often said to be `contagious'. This may be why the first comedian at a comedy club is tasked with `warming up the crowd', and laugh-tracks in sit-coms are employed to make a show seem more entertaining.\\
+\\
+% Simply as a sound
+The interactions between laughter and speech are quite interesting. In a polite conversation between two people, most often only a single person is talking at one time and interruptions are kept to a minimum. Laughter is the opposite and if someone laughs, it is socially acceptable to laugh at the same time, and often politeness brings us to laugh when someone else does, even if we do not find anything particularly funny.\cite{dupont2014acoustic}\\
+\\
+% Power
+As previously mentioned in subsection \ref{subsection:laughter}, laughter is used very differently depending on the social situation it is used in. One area of study in this field is the use of laughter in different power dynamics. In a paper by C. Rees, she looks in detail at a number of conversations which occur in a patient-doctor-student situation at a doctors office. In these scenarios there is a doctor and a student working directly under the doctor consulting a patient. The role of power in the workplace is looked at through the use of laughter by all parties. She concludes that: ``The laughables can be construed as teases of various kinds: fallibility, frustration, cynicism and/or sexual teasing. Although some of the teases may have been attempts by participants to construct intimacy, we believe that the teases functioned primarily to construct power, identity and gender.''\cite{rees2010should} In another paper looking at laughter in social work, it is noted that there is much more laughter between the social workers than there is between their clients. It is concluded that laugher is used: ``(Laughter is) employed by staff members as: (1) a way to create informal settings between staff and clients; (2) a way to deal with situational tensions/ambiguity in the work; and, (3) a way to deal with organizational contradictions in working with clients.''\cite{mik2007interpersonal}\\
+\\
+In a study by J. Bachorowski, students at a university listened to different recorded laughter segments for several people, and told to rate each subject in terms of `how interested to meet them' they would be. They found that both males and females are much more interested in meeting someone who uses voiced laughter more often than unvoiced grunts, pants, and snortlike sounds.\cite{bachorowski2001not}\\
+\\
+Highlighted by these studies is the large amount of depth for the different uses of laughter in social situations. This again draws attention to the large variety of different laughter types used in common situations, and the difficulty of laughter detection.
+
+\subsubsection{Health Perspective}
+% Laughter from a health perspectivex
+idk if this is even worth talking about given the small amount of research done here, and how hand-wavey it is.
+
+% Laughter synthesis
+\subsubsection{Laughter Synthesis}
+\cite{dupont2014acoustic}
+
+\subsection{Datasets}
+
+% Talk about the datasets used in other papers, and how these differ from ours, and how the results will be impacted by this.
+One of the most important aspects of any machine learning problem is the procurement of a good quality dataset to train a model on. Several databases with pre-labelled laughter exist, and this section aims to analyse these databases in terms of their effectiveness in training a laughter classifier. 
+\cite{dupont2014acoustic}
 
 \subsection{Preprocessing}
 
 % There is definately much more you can write on MFCC's here.
+	% Comparison to PLP's
 	% Why did you choose MFCC's?
 	% How exactly do MFCC's work?
 		% Plus pictures.
@@ -122,7 +192,20 @@ Another goal of this study is to replicate similar\cite{gosztolya2016laughter} r
 
 \subsection{Machine Learning Techniques}
 
+% Machine learning overview
+% Statistical models
+	% Markov models, and all other models used in previous papers.
+	% Neural networks
+	% Sequential Neural Network
+	% lstm networks
+	% Wavenet?
+
 \subsection{Previous Laughter Detection Attempts}
+
+% In this section we will talk about other laughter detection papers.
+% Definately discuss the metrics they use to talk about accuracy at some point.
+
+For example, in a study by S. Sherer, both audio, and tracked facial position were used as inputs to a laughter detector.\cite{scherer2009multimodal} In another study by S. Petridis, facial expression was broken down into four main features and used alongside audio features to aid laughter detection.\cite{petridis2008audiovisual}
 
 \section{Methodology}
 
@@ -146,7 +229,7 @@ When this project was started, there was no dataset or prior work on this topic,
 		% My classification.
 		% Compared to other peoples classification and maybe error analysis.
 
-The dataset used for this project was a collection of recorded spontaneous speech from the Australian National Corpus. A total of eighty-one different audio clips was used, for a total audio length of fifteen hours and twenty-six minutes. These audio snippets contained conversations from students in the school yard, interview type scenarios, casual around-the-house conversation, and a variety of people in different scenarios. A majority of the recordings were taken over twenty years ago on cassette tape, and have been since converted to digital format. Conversations most frequently occur between two or sometimes three people, with the occasional recording containing more. This is important to note, as this thesis details the detection of laughter by one person, and not the detection of laughter of many people at once, as is done in other papers. [INSERT REFERENCE HERE.]\\
+The dataset used for this project was a collection of recorded spontaneous speech from the Australian National Corpus. A total of eighty-one different audio clips was used, for a total audio length of fifteen hours and twenty-six minutes. These audio snippets contained conversations from students in the school yard, interview type scenarios, casual around-the-house conversation, and a variety of people in different scenarios. A majority of the recordings were taken over twenty years ago on cassette tape, and have been since converted to digital format. Conversations most frequently occur between two or sometimes three people, with the occasional recording containing more. This is important to note, as this thesis details the detection of laughter by one person, and not the detection of laughter of many people at once, as is done in other papers.\cite{kennedy2004laughter}\\
 \\
 This corpus is smaller than the datasets used in other studies, which have used hundreds of hours of audio from recorded meetings, or telephone calls. It is well known that machine learning techniques improve where there is more data, and with only fifteen hours of audio, our results will be limited. The laughter in the audio used in this study is very diverse, with many different types of laughs. There are long belly laughs from old friends, and very short polite laughs from a child addressing their parents. There are laughs from people with thick accents, and laughs emitted which trying to talk. The diversity of the dataset used is an advantage, as any patterns learnt should be to the nature of laughter 'in-general' and not overgeneralise to a specific type of laughter, or the laughter of one person.\\
 \\
@@ -156,7 +239,7 @@ All audio files are purely recordings of human speech, and do not contain noises
 
 Prior to this study, the audio from the Australian National Corpus had never been used for laughter detection, and the data labels did not exist. Past research into laughter detection used the laughter labels that meeting transcribers had attached to the transcriptions of meetings. [INSERT REFERENCE HERE] and researchers had fiddled with portions of the data themselves because they found the data labels inaccurate. [FIND REFERENCE HERE AND MAYBE QUOTE]. However, with hundreds of hours of audio, sifting through it all manually to select the laughter would be infeasible. In this study, the audio was listened to, and the laughter segments were manually selected down to the millisecond.\\
 \\
-The method used to classify the laughter, was to use ELAN [REFERENCE], an audio-visual transcription software, to select the sections of audio which contain laughter. ELAN outputs this data in an XML format, which is parsed into a list of times when laughter starts, and then subsequently stops. These lists of start and stop times are used when creating the dataset, and the label (in one-hot encoded form) is appended to the vector of audio features.\\
+The method used to classify the laughter, was to use ELAN\footnote{ELAN is a product of the Max Planck Institute for Psycholinguistics, The Language Archive, Nijmegen, The Netherlands. It is free, and can be found here: \url{http://tla.mpi.nl/tools/tla-tools/elan/}}\cite{sloetjes2008annotation}, an audio-visual transcription software, to select the sections of audio which contain laughter. ELAN outputs this data in an XML format, which is parsed into a list of times when laughter starts, and then subsequently stops. These lists of start and stop times are used when creating the dataset, and the label (in one-hot encoded form) is appended to the vector of audio features. This list of start and stop times can also be quickly analysed to give some insight into the frequency and average laughter length in the collected dataset. The average laughter time of roughly one second in Table \ref{laughter_stats_table} agrees with findings from previous studies about the nature of laughter.\cite{bachorowski2001acoustic}\\
 \\ 
 \begin{table}[]
 \centering
@@ -179,7 +262,7 @@ Audio File with Most Laughs Contains  & 102 laughs     \\ \hline
 	\caption{A histogram of the laughter segment lengths.}
 	\label{laughter_length_histogram}
 \end{figure}
-Laughter in speech is a hard audio signal to classify. It often does not have a definite start or end point. Commonly an individual laugh will be preceded by a sharp inhalation, and/or followed by a brief `ahh' sound, and every laugh is different. Some might be very quiet snickers, snorts, or just fast exhalations. What do we empirically classify as `laughter'? Rather than define `laughter' as a specific type of laughter, potentially an easily distinguishable laughter like a belly-laugh, which would make the job of classification much easier, the data was classified as what the author `felt' was laughter. In order to train a model to predict laughter as accurately as a human, it needs a human-like classification. This makes this section particularly tough to write as scientists don't enjoy saying: ``This particular section of audio `felt' like laughter'', but would rather employ some quantitative analysis to say: ''This audio is definitely laughter because...''. When it comes to machine learning with audio, we want to give the model something a human thinks is correct, and let the machine find the complex mathematical relationships which separate laughter from non-laughter.\\
+Laughter in speech is a hard audio signal to classify. It often does not have a definite start or end point. Commonly an individual laugh will be preceded by a sharp inhalation, and/or followed by a brief `ahh' sound, and every laugh is different. Some might be very quiet snickers, snorts, or just fast exhalations. What do we empirically classify as `laughter'? Rather than define `laughter' as a specific type of laughter, potentially an easily distinguishable laughter like a belly-laugh, which would make the job of classification much easier, the data was classified as what the author `felt' was laughter. In order to train a model to predict laughter as accurately as a human, it needs a human-like classification. This makes this section particularly tough to write as scientists don't enjoy saying: ``This particular section of audio `felt' like laughter'', but would rather employ some quantitative analysis to say: ''This audio is definitely laughter because...''. When it comes to machine learning with audio, we want to give the model something a human thinks is correct, and let the machine find the complex mathematical relationships which separate laughter from non-laughter. This means that while previous papers have, for example not classified the exhalation after the laugh as laughter\cite{bachorowski2001acoustic}, this report may have, so slightly different finding with respect laughter lengths are expected. \\
 \\
 Nevertheless, when classifying laughter, what one person `feels' is laughter, may not be identical to the observations of another person, and this is something worth investigating. In an effort to investigate differences in laughter classification between different people, two people were taught how to classify laughter using ELAN, and given a 45 minute audio clip to classify.\\
 \\
