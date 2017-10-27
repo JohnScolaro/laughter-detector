@@ -6,6 +6,7 @@ __pycache__/
 
 # No figures
 figs/
+!report/figs
 
 # Not the whole processed dataset
 dataset/
@@ -30,5 +31,3 @@ origional_audio/
 *.bbl
 *.blg
 *.bak
-report/figs/
-report/diagrams/

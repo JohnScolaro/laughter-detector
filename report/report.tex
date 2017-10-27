@@ -16,6 +16,7 @@
 \usepackage{subcaption}
 \usepackage{lscape}
 \usepackage{longtable}
+\usepackage{multirow}
 
 % Title Page
 \title{Laughter Detection using Neural Networks}
@@ -137,6 +138,7 @@ On the subject of laughter classification, most papers separate laughter into a 
 	\label{laughter_spectrogram_from_bachorowski}
 \end{figure}
 % Different situations when laughter is different.
+\noindent
 Laughter also changes when produced under different circumstances. In N. Campbell's paper: ``Whom we laugh with affects how we laugh''\cite{campbell2007whom} a neural network is created and training on a single persons laughter when talking to a range of different people. The network learns to discriminate (with an accuracy slightly below 50\%) between with whom the speaker is speaking purely by the difference in laughs they make, proving that there is some difference in laughter features in different situations. This paper focussed on the differences in laughter when talking to people of different gender and of different ethnicity.\\
 \\
 % Biological laughter production
@@ -245,6 +247,7 @@ SEMAINE Database & Induced (Watching video of automated avatar) & 5.5 hours of a
 % Further discussion about the ICSI database
 \subsubsection{ICSI Database}
 The most commonly used database in this table is the ICSI Meeting corpus, and it deserves a little extra discussion. This project began in 2000, and collected 72 hours of speech from meetings that ``would have occurred anyway''\cite{janin2003icsi}. Each of the several participants in the meeting were given head mounted microphones and recorded individually, as well as one other microphone left in the table between them to record all audio. Highly detailed transcriptions of these recordings were created, where the start and end time of every utterance is marked. Many different non-speech sounds were also marked, such as laughter. The frequency of each of these non-vocal sounds is shown in Table \ref{table:icsi_meeting_utterance_frequency}\cite{laskowski2007correlation}. While the ICSI database was not created to investigate laughter, due to it's large number of precisely labelled laughs, several papers analysing the frequency and use of laughter within these meetings were written. Also, this dataset is the most used dataset in laughter detection, with several papers all using these transcriptions to develop laughter classifiers.\cite{kennedy2004laughter,truong2005automatic,knox2007automatic} These papers mostly used the original labelling of the laughter, and occasionally modified it to exclude `bad' laughter segments (Segments which contained faint of near inaudible laughter, or overlapping speech and laughter)\cite{truong2005automatic}.
+
 \begin{table}[H]
 \centering
 \begin{tabular}{|l|l|l|}
@@ -261,6 +264,8 @@ The most commonly used database in this table is the ICSI Meeting corpus, and it
 \caption{A table showing the frequency of laughter related non-speech utterances in the ICSI meetings database\cite{laskowski2007correlation}.}
 \label{table:icsi_meeting_utterance_frequency}
 \end{table}
+
+\noindent
 The ICSI would have been near perfect for this thesis if it were more accessible. The cost to obtain this dataset is \$2400 AUD, which rules it out as an option for this study.
 % Further discussion about the MANHOB database
 \subsubsection{MANHOB Database}
@@ -354,6 +359,7 @@ This basic type of neural network is called a feed-forward neural network. Both 
 \end{figure}
 
 	% lstm networks
+\noindent
 Recurrent Neural Networks (RNNs) and Long Short Term Memory units (LSTMs) are different neural network models specifically designed to classify temporal signals. Recurrent neural networks have layers which feed back into themselves and/or previous layers, giving the system information about previous inputs. Recurrent neural networks encounter a problem known as the `vanishing gradient problem', in which older inputs contribute less to the output of the network. LSTM units were created to solve this, and can retain information about features mentioned in the past to influence the current outputs. LSTMs have improved speech to text\cite{graves2013speech}, recognition of context sensitive languages, and handwriting recognition\cite{greff2016lstm}.
 
 \newpage
@@ -438,6 +444,7 @@ Audio File with Most Laughs Contains  & 102 laughs     \\ \hline
 \caption{A table containing statistics of the laughter classified in the complete dataset.}
 \label{laughter_stats_table}
 \end{table}
+
 \begin{figure}[H]
 	\centering
 	\vspace{0.5cm}
@@ -445,6 +452,8 @@ Audio File with Most Laughs Contains  & 102 laughs     \\ \hline
 	\caption{A histogram of the laughter segment lengths.}
 	\label{laughter_length_histogram}
 \end{figure}
+
+\noindent
 Laughter in speech is a hard audio signal to classify. It often does not have a definite start or end point. Commonly an individual laugh will be preceded by a sharp inhalation, and/or followed by a brief `ahh' sound, and every laugh is different. Some might be very quiet snickers, snorts, or just fast exhalations. What do we empirically classify as `laughter'? Rather than define `laughter' as a specific type of laughter, potentially an easily distinguishable laughter like a belly-laugh, which would make the job of classification much easier, the data was classified as what the author `felt' was laughter. In order to train a model to predict laughter as accurately as a human, it needs a human-like classification. This makes this section particularly tough to write as scientists don't enjoy saying: ``This particular section of audio `felt' like laughter'', but would rather employ some quantitative analysis to say: ''This audio is definitely laughter because...''. When it comes to machine learning with audio, we want to give the model something a human thinks is correct, and let the machine find the complex mathematical relationships which separate laughter from non-laughter. This means that while previous papers have, for example, not classified the exhalation after the laugh as laughter\cite{bachorowski2001acoustic}, this report may have, so slightly different finding with respect to laughter lengths are expected.\\
 \\
 Nevertheless, when classifying laughter, what one person `feels' is laughter, is almost certain to not be identical to the observations of another person, and this is worth investigating. In an effort to investigate differences in laughter classification between different people, and determine the accuracy of the laughter detection of the author, two people were taught how to classify laughter using ELAN, and given a 45 minute audio clip to classify.\\
@@ -464,6 +473,8 @@ In this 45 minute clip, one classifier found 87 laughter instances, and the othe
 	\caption{In this example, while both classifiers agree that the first laughter instance exists, only one classifier managed to find a second laughter segment.}
 	\label{laughter_classification_differences_2}
 \end{figure}
+
+\noindent
 The entire dataset used for training the model in this report was only classified by one person, despite the promising results and improvements enabled by multiple classifications. This was due to time constraints, and the inability to convince people to listen and classify 15 hours of speech for no apparent reward. An ideal dataset should have many classifiers, and the classification used for training could be the average of all the individual classifications. This way, a section of audio which only 50\% of people think is laughter, will only be labelled as 50\% laughter, and the sections of audio at the beginning and end of laughter segments will smoothly transition from non-laughter to laughter and back, rather than an abrupt jump.
 
 \subsection{Preprocessing}
@@ -498,12 +509,14 @@ Most audio files in the dataset were recorded at different times, on different r
 	\label{before_preprocessing}
 \end{figure}
 
+\noindent
 The volume of each audio file should be roughly equal because a louder file will produce larger features. This will reduce the ability for the network to determine the actual volume of the audio in the file. The `Amplify' function in Audacity was used to boost the volume of quiet files until all audio files were roughly the same volume. This is not a precise method of normalizing the volume between different files, but the majority of this volume normalisation will be taken care of in the file-by-file feature normalization later, so it isn't important that this volume normalization is incredibly precise, only that each file sounds roughly the same.\\
 \\
 Next, due to the nature of this dataset, several audio files were recorded in noisy environments and had large amounts of noise distorting the audio. In this section `noise' refers to the repetitive drone of machines, electronic sinusoidal noise, and artefacts of the recording device. These types of noise are largely sinusoidal, and overlay the audio throughout the entire clip. Due to the repetitive nature of this noise, it is effectively filtered out by Audacity's `Noise Reduction' filter.\footnote{For more information on the specifics of this function, an explanation of how the algorithm works can be found here: \url{http://wiki.audacityteam.org/wiki/How_Audacity_Noise_Reduction_Works#algorithm}} This filter takes a sample of a section of the original audio file which contains only noise and no additional sounds. It takes the Fourier Transform to create a noise profile, and specifically attenuates these frequencies. This method was used to reduce the amount of noise in the original audio files, as constant sound at a certain frequency will distort to values of the features extracted from the audio.\\
 \\
 Lastly, the original dataset audio contained sensitive information about many locations and people who were the subject of conversation. Any names or locations have been removed from the dataset, however they have been replaced by a harsh white-noise sound. Just as other distortions will, these segments of white noise will also reduce the accuracy of the laughter detector.  Audacity was used to hand-remove as many of these segments as possible.
 
+\newpage
 \subsubsection{Feature Extraction and Normalisation}
 
 After roughly normalizing the volume and removing noise, features need to be extracted from the audio waveform. This is a technique common to almost all speech recognition systems, and is of fundamental importance. While there are many different feature extraction methods, the features used for laughter detection were chosen to be Mel Frequency Cepstral Coefficients (MFCC's). MFCC's are essentially filter banks, measuring the intensity of audio at different frequencies. The frequency bins are scaled to imitate the ranges of audio humans hear at, and the intensity is logarithmically scaled to further imitate the perception of valume in the human ear. MFCC's were chosen because they have been used recently in a number of leading speech recognition systems.\cite{mozilladeepspeech} The number of MFCC features to generate is variable, and is generally between 12 and 26. 20 MFCC features were used in this system.\\
@@ -566,6 +579,7 @@ Simply looking at the audio waveform for examples of audio and laughter is a goo
 	\label{spectrum2}
 \end{figure}
 
+\noindent
 The waveforms shown in Figure \ref{time-series2} and Figure \ref{spectrum2} both show the waveforms of laughter and speech in different ways. There are differences between them visually in both representations, but there are no defining features of either one. In the time series waveform, the laughter appears to be louder than surrounding speech, and in the spectrogram visualisation, the finer harmonic details in speech appear to be lost, or at least much more complicated in laughter. Either way, this audio sample is interesting and shows some differences, however the dramatic differences in laughter can actually sound like make this a significantly harder problem. Laughter is not always louder than speech however, so creating a system that purely recognises volume would miss-classify loud speech and soft laughter.\\
 \\
 These waveforms convey some different features, however the neural network trained on this dataset isn't trained on the full waveform data used to generate these pictures, but on the normalised MFCC features previously generated. In order to visualize these MFCCs, lets plot that same section of audio again, but this time look at the normalised MFCC features.
@@ -578,10 +592,12 @@ These waveforms convey some different features, however the neural network train
 	\label{mfcc-visualisation}
 \end{figure}
 
+\noindent
 This plot shows that the normalized MFCC values from this small audio clip differ greatly from the spectrogram in Figure \ref{spectrum2}. The general magnitude of the audio can be seen in the first MFCC feature, showing two darker sections. All other features tend not to change hugely over the audio clip. From this plot, it is definitely not possible to easily tell the difference between laughter and non-laughter.\\
 \\
 
 % This is performing PCA and t-SNE on the origional data and features.
+\noindent
 Another method of visualising the features from the audio is to use the t-SNE algorithm to see if there is any relation between laughter segments \cite{maaten2008visualizing}. The t-student Stochastic Neighbour Embedding (t-SNE) algorithm is a dimensionality reduction technique used in machine learning to help visualise multi-dimensional data.\footnote{The creator of the t-SNE algorithm, Laurens van der Maaten, has published code to implement the t-SNE algorithm in several different languages on his website: \url{https://lvdmaaten.github.io/tsne/}. His code was used to generate these t-SNE plots.} t-SNE works by attempting to preserve distances between points in a higher dimensional space, and the lower dimensional space. It does this by plotting all points randomly on a two dimensional plane, and moving them according to forces placed on them by neighbouring points. These forces are proportional to the distance between points in their higher dimensional representation. Using t-SNE the reduce the 28x28 pixel features of the MNIST handwritten digit dataset to two dimensions, separates the different digits almost perfectly. If there are any similar features between audio files, or between different sounds, it is expected that they cluster together.
 
 \begin{figure}[H]
@@ -627,6 +643,7 @@ In saying this, for only training on a couple files, the networks Matlab created
 	\label{matlab_nn_probability}
 \end{figure}
 
+\noindent
 In short, Matlab's network is fantastic for what it was created for, to quickly create neural networks, but it does not allow the same level of control over the system as TensorFlow does. Due to Matlab's inability to train on more than a couple audio files at once, and the need for more network customisation options, TensorFlow was used to create a much more detailed network for laughter classification.
 
 \subsection{TensorFlow}\label{section:Tensorflow}
@@ -679,6 +696,7 @@ For neural networks, the training data is very important. For this reason, when 
 	\label{input_pipeline_graph}
 \end{figure}
 
+\noindent
 Now that sequences have been generated, another important question to ask is: ``If we have a sequence which is half speech, and half laughter, what is it labelled as?'' This problem has been solved in this study by assignment the label of the centre frame of the sequence to the sequence in question. In short, if the frame of audio in the centre of the sequence is laughter, then the entire sequence is classified as laughter. This was experimented with, and it was found that if the first or last frame was considered the truth label of the sequence, the model with predict laughter either too late, or two early respectively.
 
 \subsubsection{Models}
@@ -704,6 +722,7 @@ After creating an input pipeline to perfectly pass tensors from disk into a netw
 	\label{mlp_example}
 \end{figure}
 
+\noindent
 Helper functions were created to abstract the process of creating the graph representing the neural network, allowing the quick creation and testing of networks with different numbers of layers, numbers of nodes, activations functions, and other features. This let hundreds of different networks be tested to determine which has the highest accuracy of laughter classification.\\
 \\
 Two main networks were tested in this report, the MLP which classified single frames, and the larger MLP which classified a whole context window of input features. The accuracy of both of these will be mentioned in the results section of this report. A third network utilising long-short term memory units was attempted using TensorFlow, however after training numerous models with it no reasonable results were obtained. Not enough is known about LSTMs to know whether this was due to an incorrect training method, incorrect system, or other issues. Either way, the results obtained from LSTM models will not be discussed further.
@@ -724,7 +743,7 @@ Two main networks were tested in this report, the MLP which classified single fr
 	\label{network_diagram2}
 \end{figure}
 
-
+\newpage
 \subsubsection{Initialization}
 
 % Talk about initialization of the network.
@@ -741,6 +760,7 @@ Initially, the easiest way to initialise the weights was to select them from a n
 	\label{bad_initialisation1}
 \end{figure}
 
+\noindent
 Through researching this problem, a solution is using Xavier initialisation to initialise nodes. This method was first published in 2010 by Xavier Glorot, and Yoshua Bengio \cite{glorot2010understanding}. They discovered that if you look at the output of a linear neuron, you can write it's output like so:
 \begin{equation}
 Y = W_{1}X_{1} + W_{2}X_{2} + \ldots + W_{n}X_{n}
@@ -786,18 +806,26 @@ Another large problem of this system, is the mismatch in sizes of data from each
 \item Make the amount of data for each classification option equal
 \item Modify the cost function to favour a certain classification
 \end{itemize}
-The first option here involves either throwing away a large amount of non-laughter audio, or more commonly, duplicating laughter segments. 
+The first option here involves either throwing away a large amount of non-laughter audio, or more commonly, duplicating laughter segments. This can be done either in dataset creation, or in the input pipeline in TensorFlow. However, this would be tricky and there are no inbuilt functions for duplicating data specific numbers of times in the input pipeline of TensorFlow and would need to be created by hand. The other option here is much easier, modify the cost function to more heavily penalize the misclassification of laughter sequences. In the cost function, if a multiplier is added to the cost of all the laughter segments, it forces the network to classify laughter and non-laughter segments more equally.\\
+\\
+Using this method of dataset size normalizing has it's problems too. Since laughter segments come in series, often batches will either contain no laughter sequences, or many laughter sequences. This causes the batches to either have a very low cost, or a very high cost. This then creates either very small or large gradients, which result in very small or large node weight changes. Ideally, the nodes are changed a very small amount every update, and the size of these weight updates can be controlled with the learning rate constant. This is set small enough to stop training instability. However, if some updates are large, and others are small, then to ensure the system's weights are not being constantly thrown around by large weight updates, the learning rate must be set very low, and this causes training to take a long time.
 
-\subsubsection{Hyper parameters}
-
-% Show results of big tests of many different networks to find best hyper params.
-
+\newpage
 \subsubsection{Training}
 
 % Talk about my training methods and how I split data and train on it.
-% Not so much because it's interesting or unique, but to show I did it correctly.
+	% Not so much because it's interesting or unique, but to show I did it correctly.
 % Talk about not using a validation set, and the effects of that. Also, what I did to try to mitigate the effects of this.
+% Talk about the large number of hyper parameters and how you trained to attempt to find the best ones.
+To train this network the dataset was split and 85\% of the files were selected for training, and the remaining 15\% were selected for testing. A separate input pipeline is created for each of these sets. For the training phase, the network computes gradients and node weight updates for each batch in the dataset until there are no batches left. At the end of the epoch, the testing set is loaded and predictions are calculated for each sequence in the testing set. In this evaluation stage, weights are not updated. Weights are only ever updated when evaluating the test set. This end-of-epoch evaluation allows the program to record a number of metrics, and if the test accuracy appears to be performing well, the node weights can be saved to disk. After this testing phase, and outputting the accuracy of the network, testing continues. The iterator containing the dataset is reinitialised and the node weights are modified for another epoch. This continues for a set number of epochs.\\
+\\
+This system uses only a training and test set. Testing the network on the same inputs it was trained with gives a false reading of how accurate the system really is, so separating these sets is crucial. To improve the quality of the results, training should have been done by separating the data into three sets: 70\% training, 15\% validation, and 15\% test. Then end-of-epoch evaluation could have been done on validation sets, and only report the test set accuracy at the end. If no validation set it used, the network is trained on the training set until it performs optimally on the test set. Introducing this validation set stops us from optimising the network for the test set, and lets us optimise it for the validation set instead. This would be more accurate.\\
+\\
+To overcome most of this accuracy issue, the result reported in the next section are found by averaging the best network from a number of different training runs. In each run, the test set and training set are re-split with different files in each set. Taking the average over these networks gives an average measure of the system's accuracy on data it has not been trained on.\\
+\\
+Another difficult area to approach when training neural networks, is how to approach the problem of setting the large number of hyper-parameters of the system in order to obtain the highest accuracy and best results. In this report, a program was made which could queue up several hundred neural networks to be trained, and would save their results on disk. This allowed several hundred tests with parameters sweeping through several values to be evaluated, and the most optimum values found.
 
+\newpage
 \subsubsection{Model Evaluation Metrics}
 
 % Talk about accuracy and sensitivity and specificity.
@@ -806,18 +834,62 @@ The first option here involves either throwing away a large amount of non-laught
 	% The ROC curve
 	% The audio probability graphs
 	% The Confusion matrixes.
+    % Equal error rate
+					
+After training a model to detect laughter, the final stage is evaluating how well the model performed. There are many different metrics for determining how well a model performs, and this section will explain a number of these.\\
+\\
+Accuracy is surprisingly not a great performance metric for laughter detection using this dataset. Since roughly 3\% of the total audio is laughter, any classifier which classifies all audio as non-laughter will achieve 97\% accuracy. More complex metrics are needed to evaluate the models. One method is to look at the confusion matrix of audio classified by the model. In table form, this looks like Figure \ref{example_confusion_matrix} and much more information can be taken from it, specifically the exact number of correctly and incorrectly classified laughter and non-laughter segments. From this table, the sensitivity and specificity can be easily calculated. Sensitivity $= \frac{d}{c + d}$, and specificity $= \frac{a}{a + b}$. These two metrics show the correctly classified percentage of laughter and non-laughter respectively, and are useful tools in determining the most accurate models.\\
+\\
+
+\begin{figure}
+\centering
+\begin{tabular}{l|l|c|c|c}
+\multicolumn{2}{c}{}&\multicolumn{2}{c}{Prediction}&\\
+\cline{3-4}
+\multicolumn{2}{c|}{}&Non-laughter&Laughter\\
+\cline{2-4}
+\multirow{2}{*}{True Label}& Non-laughter & $a$ & $b$\\
+\cline{2-4}
+& Laughter & $c$ & $d$\\
+\cline{2-4}
+\end{tabular}
+\label{example_confusion_matrix}
+\caption{An example confusion matrix from a laughter detection network.}
+\end{figure}
+
+\noindent
+The network outputs the percentage chance that the classified audio sequence is laughter. To use these outputs in the confusion matrix, the predictions need to be either laughter or non-laughter and nothing in between. To get these definitive values, a threshold needs to be set. For the confusion matrix, this threshold is set at 50\% chance, but it would be interesting to see how the sensitivity and specificity change when changing the threshold. To do this, the Receiver Operating Characteristic (ROC) is plotted. This is known as the ROC curve, and is a plot of the true positive rate, against the false negative rate, for a varying discrimination threshold. An example of an ROC curve plot for a laughter detector network is shown in Figure \ref{laughter_roc1}, with the equal error rate point labelled.
+
+\begin{figure}[H]
+	\centering
+	\vspace{0.5cm}
+	\includegraphics[scale = 0.7]{figs/laughter_roc.png}
+	\caption{An ROC curve displaying the accuracy of a system when using different discrimination thresholds. A black dot has been placed on the point of equal error rate.}
+	\label{laughter_roc1}
+\end{figure}
+
+\noindent
+The most commonly used metric for evaluating systems for laughter detection is the `equal error rate' \cite{reuderink2008decision,kennedy2004laughter,truong2005automatic,knox2007automatic,petridis2008fusion}. This can be easily seen in ROC curves, and is the point on the ROC curve where the fraction of false positives is equal to the fraction of false negatives. This point is the equal error rate, and is aimed to be reduced. Visually, the point of equal error rate can be found quite easily if a line is drawn from the top left corner to the bottom right corner. The intersection of this line with the ROC curve is the point of equal error. 
 
 \newpage
-
 \section{Results}
 
 % Talk about the metrics of the best network I made.
+% Talk about the node features of the best network I made. (For each learning model)
+% Talk about results from different networks
+	% The single frame network
+	% The multi frame network
+% Best accuracy of different hyperparameter networks.
 
+\newpage
 \section{Discussion}
 
 % Maybe the in depth results will take place in this section, and not above.
 % Talk about funky things that my networks have picked up. All the weird things.
 % Different features of the audio my system is picking up.
+
+\subsection{Node Weights}
+\subsection{Optimisation Algorithm}
 
 \subsection{Improvements and Future Study}
 
@@ -825,6 +897,7 @@ The first option here involves either throwing away a large amount of non-laught
 % If someone else were to do this thesis, the things I would have liked them to do are:
 	% Different types of laughs: genuine vs polite
 
+\newpage
 \section{Conclusion}
 
 % Conclude. Another brief summary of everything I have done, and close.
